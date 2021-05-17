@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Project(models.Model):
-    project_id = models.AutoField(primary_key=True)
+    project_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
     start_date = models.CharField(max_length=10)
     end_date = models.CharField(max_length=10)
@@ -16,7 +16,7 @@ class Project(models.Model):
 
 
 class Site(models.Model):
-    site_id = models.AutoField(primary_key=True)
+    site_id = models.BigAutoField(primary_key=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     start_date = models.CharField(max_length=10)
@@ -33,7 +33,7 @@ class Site(models.Model):
 class Car(models.Model):
     TYPES = (('DumpTruck', '덤프 트럭'), ('WasteTruck', '폐기물 트럭'), ('RecyclingTruck', '재활용 트럭'), ('Tank', '탱크'))
 
-    car_id = models.AutoField(primary_key=True)
+    car_id = models.BigAutoField(primary_key=True)
     type = models.CharField(max_length=20, choices=TYPES)
     number = models.CharField(max_length=20)
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True)
@@ -49,7 +49,7 @@ class Car(models.Model):
 class Resource(models.Model):
     TYPES = (('Ton', '톤'), ('Kg', '킬로그램'), ('m**3', '삼제곱미터'))
 
-    resource_id = models.AutoField(primary_key=True)
+    resource_id = models.BigAutoField(primary_key=True)
     type = models.CharField(max_length=20)
     name = models.CharField(max_length=50)
     block = models.CharField(max_length=10, choices=TYPES)
@@ -62,7 +62,7 @@ class Resource(models.Model):
 
 
 class Location(models.Model):
-    location_id = models.AutoField(primary_key=True)
+    location_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=100)
     address = models.CharField(max_length=100)
     site = models.ForeignKey(Site, on_delete=models.CASCADE)
