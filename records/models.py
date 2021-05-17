@@ -2,7 +2,7 @@ from django.db import models
 
 
 class DriveRecord(models.Model):
-    drive_record_id = models.AutoField(primary_key=True)
+    drive_record_id = models.BigAutoField(primary_key=True)
     car = models.ForeignKey('projects.Car', on_delete=models.SET_NULL, null=True)
     loading_location = models.ForeignKey('projects.Location', on_delete=models.SET_NULL, null=True,
                                          related_name='loading_location')
@@ -23,7 +23,7 @@ class DriveRecord(models.Model):
 
 
 class DriveRoute(models.Model):
-    drive_route_id = models.AutoField(primary_key=True)
+    drive_route_id = models.BigAutoField(primary_key=True)
     latitude = models.DecimalField(max_digits=15,decimal_places=12)
     longitude = models.DecimalField(max_digits=15,decimal_places=12)
     distance = models.DecimalField(max_digits=10, decimal_places=4)
