@@ -18,6 +18,7 @@ class Admin(models.Model):
 
 
 class Driver(models.Model):
+    driver_id = models.AutoField(primary_key=True)
     phone_number = models.CharField(max_length=15)
     name = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
