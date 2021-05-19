@@ -67,7 +67,7 @@ class Location(models.Model):
     longitude = models.DecimalField(max_digits=20, decimal_places=17)
     latitude = models.DecimalField(max_digits=20, decimal_places=17)
     type = models.BooleanField()
-    resource = models.ForeignKey(Resource, on_delete=models.SET_NULL, null=True)
+    resource = models.ManyToManyField(Resource)
     plan = models.IntegerField()
     range = models.IntegerField()
     is_allow = models.BooleanField(default=False)
