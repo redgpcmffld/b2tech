@@ -1,7 +1,8 @@
-from rest_framework import serializers
-from .models import Site
 from django.core import validators
 
+from rest_framework import serializers
+
+from .models import Site, Location, Resource
 
 class SiteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,3 +31,32 @@ class SiteViewSerializer(serializers.ModelSerializer):
 
     def get_project(self, obj):
         return {'project_id': obj.project.pk, 'name': obj.project.name}
+
+
+class LocationSerializer(serializers.ModelSerializer):
+    resource = serializers.PrimaryKeyRelatedField(queryset=Resource.objects.all(), required=True)
+
+    class Meta:
+        model = Location
+        fields = '__all__'
+
+
+class LocationViewSerializer(serializers.ModelSerializer):
+    site = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Location
+        fields = [
+            'location_id',
+            'site',
+            'type',
+            'name',
+            'address',
+            'latitude',
+            'longitude',
+            'range',
+            'is_allow',
+        ]
+
+    def get_site(self, obj):
+        return {'site_id': obj.site.pk, 'name': obj.site.name}
