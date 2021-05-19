@@ -1,27 +1,61 @@
-import json
-
-from django.http import HttpResponse, JsonResponse
-from django.views import View
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import (
+    SiteSerializer,
+    SiteViewSerializer,
+)
 
 from .models import Site
 
 
-class SiteView(View):
+class SiteView(APIView):
     def post(self, request):
-        data = json.loads(request.body)
+        try:
+            if Site.objects.filter(name=request.data['name']).exists():
+                return Response({'message': 'NAME_EXIST'}, status=status.HTTP_409_CONFLICT)
 
-        project = data.get('project')
-        name = data.get('name')
-        start_date = data.get('start_date')
-        end_date = data.get('end_date')
-        admin = data.get('admin')
+            serializer = SiteSerializer(data=request.data)
 
-        if not project or not name or not start_date or not end_date or not admin:
-            return JsonResponse({'message': 'CHECK_YOUR_INPUT'}, status=200)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if Site.objects.filter(name=name).exists():
-            return JsonResponse({'message': 'NAME_EXIST'}, status=409)
+        except Exception:
+            return Response({'message': Exception}, status=status.HTTP_400_BAD_REQUEST)
 
-        Site(project=project, name=name, start_date=start_date, end_date=end_date, admin=admin).save()
+    def get(self, request):
+        try:
+            sites = Site.objects.filter(is_active=True)
+            serializer = SiteViewSerializer(sites, many=True)
 
-        return HttpResponse(status=200)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Site.DoesNotExist:
+            return Response({'message': 'DATA_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request):
+        try:
+            if Site.objects.filter(pk=request.data['site_id']).exists():
+                site = Site.objects.get(pk=request.data['site_id'])
+
+            serializer = SiteSerializer(site, data=request.data)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except KeyError:
+            return Response({'message': 'CHECK_YOUR_INPUT'}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, site_id):
+        try:
+            site = Site.objects.get(pk=site_id, is_active=True)
+            site.is_active = False
+            site.save()
+            return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK)
+
+        except Site.DoesNotExist:
+            return Response({'message': 'CHECK_YOUR_INPUT'}, status=status.HTTP_400_BAD_REQUEST)
