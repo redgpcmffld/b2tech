@@ -16,15 +16,17 @@ class LocationView(APIView):
             return Response({'message': '존재하지 않는 지역 입니다.'}, status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request):
-        print(request.data)
         try:
-            if Location.objects.filter(name=request.data.get('name')).exists():
+            if Location.objects.filter(
+                    name=request.data.get('name'),
+                    type=request.data.get('type'),
+                    site_id=request.data.get('site')).exists():
                 return Response({'message': '이미 등록되어 있는 지역입니다.'}, status=status.HTTP_409_CONFLICT)
             serializer = LocationSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'message': 'SUCCESS'}, status=status.HTTP_201_CREATED)
-            return Response({'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception:
             return Response({'message': Exception}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -32,13 +34,13 @@ class LocationView(APIView):
         try:
             if request.data.get('location_id') is None:
                 return Response({'message': '지역 정보를 입력해주세요'}, status=status.HTTP_400_BAD_REQUEST)
-            locaiton = Location.objects.get(pk=request.data.get('location_id'))
-            serializer = LocationSerializer(locaiton, data=request.data)
+            location = Location.objects.get(pk=request.data.get('location_id'))
+            serializer = LocationSerializer(location, data=request.data)
 
             if serializer.is_valid():
                 serializer.save()
                 return Response({'message': 'SUCCESS'}, status=status.HTTP_201_CREATED)
-            return Response({'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Location.DoesNotExist:
             return Response({'message': '존재하지 않는 지역 정보 입니다.'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -47,6 +49,6 @@ class LocationView(APIView):
             location = Location.objects.get(pk=location_id, is_active=True)
             location.is_active = False
             location.save()
-            return Response({'message': 'success'}, status=status.HTTP_200_OK)
+            return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK)
         except Location.DoesNotExist:
             return Response({'message': '존재하지 않는 지역 정보 입니다.'}, status=status.HTTP_404_NOT_FOUND)
