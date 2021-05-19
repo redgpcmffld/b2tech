@@ -63,7 +63,7 @@ class Location(models.Model):
     location_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=100)
     address = models.CharField(max_length=100)
-    site = models.ForeignKey(Site, on_delete=models.CASCADE)
+    site = models.ManyToManyField(Site)
     longitude = models.DecimalField(max_digits=20, decimal_places=17)
     latitude = models.DecimalField(max_digits=20, decimal_places=17)
     type = models.BooleanField()
