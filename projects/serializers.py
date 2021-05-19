@@ -25,17 +25,9 @@ class LocationViewSerializer(serializers.ModelSerializer):
             'latitude',
             'longitude',
             'range',
-            'is_allow',
-            'resource',
-            'plan'
+            'is_allow'
         ]
 
     def get_site(self, obj):
         return {'site_id': obj.site.pk, 'name': obj.site.name}
-    #
-    # def get_type(self, obj):
-    #     if obj.type == 1:
-    #         obj.type = '상차지'
-    #     else:
-    #         obj.type = '하차지'
-    #     return obj.type
+
