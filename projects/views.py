@@ -28,7 +28,7 @@ class CarView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception:
-            return Response(Exception.error, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': Exception}, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
         try:
