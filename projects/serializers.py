@@ -30,3 +30,24 @@ class LocationViewSerializer(serializers.ModelSerializer):
 
     def get_site(self, obj):
         return {'site_id': obj.site.pk, 'name': obj.site.name}
+
+
+class ResourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resource
+        fields = '__all__'
+
+
+class ResourceViewSerializer(serializers.ModelSerializer):
+    location_info = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Resource
+        fields = ['name', 'type', 'block']
+
+    def get_location_info(self, obj):
+        result = [{
+            "pk": location.pk,
+            "name": location.name
+        }for location in obj.location_set.all()]
+        return result
