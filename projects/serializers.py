@@ -49,4 +49,4 @@ class ResourceViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Resource
-        fields = ['name', 'type', 'block', 'location_set']
+        fields = ['pk', 'name', 'type', 'block', 'location_set']

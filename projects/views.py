@@ -1,12 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import (
-    ResourceSerializer,
-    ResourceViewSerializer
-)
 
 from .models import Resource
+from .serializers import ResourceSerializer, ResourceViewSerializer
 
 
 class ResourceListView(APIView):
