@@ -18,7 +18,7 @@ class CarSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class CarSerializerGet(serializers.ModelSerializer):
+class CarViewSerializer(serializers.ModelSerializer):
     driver = serializers.SerializerMethodField()
     site = serializers.SerializerMethodField()
 

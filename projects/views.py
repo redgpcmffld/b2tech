@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (
     CarSerializer,
-    CarSerializerGet
+    CarViewSerializer
 )
 
 from .models import Car
@@ -33,7 +33,7 @@ class CarView(APIView):
     def get(self, request):
         try:
             cars = Car.objects.filter(is_active=True)
-            serializer = CarSerializerGet(cars, many=True)
+            serializer = CarViewSerializer(cars, many=True)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
 
