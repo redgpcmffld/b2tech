@@ -19,8 +19,8 @@ class CarSerializer(serializers.ModelSerializer):
 
 
 class CarViewSerializer(serializers.ModelSerializer):
-    driver = serializers.SerializerMethodField()
     site = serializers.SerializerMethodField()
+    driver = serializers.SerializerMethodField()
 
     class Meta:
         model = Car
