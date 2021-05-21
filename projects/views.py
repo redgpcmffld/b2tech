@@ -1,12 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import (
-    CarSerializer,
-    CarViewSerializer
-)
 
 from .models import Car
+from .serializers import CarSerializer, CarViewSerializer
 
 
 class CarListView(APIView):

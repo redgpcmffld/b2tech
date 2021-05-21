@@ -61,4 +61,3 @@ class LocationViewSerializer(serializers.ModelSerializer):
 
     def get_site(self, obj):
         return {'site_id': obj.site.pk, 'name': obj.site.name}
-
