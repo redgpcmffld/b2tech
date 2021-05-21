@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from .models import Site, Location, Resource
 
+
 class SiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Site
