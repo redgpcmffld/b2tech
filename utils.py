@@ -3,7 +3,7 @@ import jwt
 from django.http import HttpResponse, JsonResponse
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Admin
+from users.models import Admin
 
 
 from my_settings import algorithms, SECRET_KEY
