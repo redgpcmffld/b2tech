@@ -1,10 +1,37 @@
 import bcrypt
 
-from rest_framework.response import Response
-from rest_framework import serializers
 from django.core import validators
 
-from .models import Admin
+from rest_framework.response import Response
+from rest_framework import serializers
+from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
+
+from projects.models import Site
+from .models import Driver, Admin
+
+
+class DriverViewSerializer(serializers.ModelSerializer):
+    site = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    created_at = serializers.DateField(write_only=True, required=False)
+    updated_at = serializers.DateField(write_only=True, required=False)
+    is_active = serializers.BooleanField(write_only=True, required=False)
+
+    class Meta:
+        model = Driver
+        fields = '__all__'
+
+
+class DriverSerializer(serializers.ModelSerializer):
+    site = serializers.PrimaryKeyRelatedField(queryset=Site.objects.filter(is_active=True), required=True)
+    class Meta:
+        model = Driver
+        fields = '__all__'
+
+    def validate(self, attrs):
+        validators.RegexValidator(r'^\d{11}$', '잘못된 전화번호 형식입니다.')(attrs.get('phone_number'))
+        validators.RegexValidator(r'^[가-힣]{2,}$|^[a-z]{2,20}$', '이름은 2글자 이상 한글이거나 영어이어야 합니다.')(attrs.get('name'))
+        return attrs
+
 
 class AdminSerializer(serializers.ModelSerializer):
     class Meta:
