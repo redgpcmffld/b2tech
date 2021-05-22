@@ -1,4 +1,9 @@
+from rest_framework.pagination import PageNumberPagination
+
+
 class MyPagination():
+    pagination_class = PageNumberPagination
+
     @property
     def paginator(self):
         """

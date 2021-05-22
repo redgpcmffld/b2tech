@@ -1,27 +1,27 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
 
 from .serializers import LocationSerializer, LocationViewSerializer
 from .models import Location, Site
+from utils import login_required
 from pagination import MyPagination
 
 
 class LocationView(APIView, MyPagination):
+    @login_required
     def get(self, request):
         try:
-            self.queryset = Location.objects.filter(is_active=True)
-            self.serializer_class = LocationViewSerializer
-            PageNumberPagination.page_size = request.GET.get('limit', 10)
-            self.pagination_class = PageNumberPagination
-            page = self.paginate_queryset(self.queryset)
-            serializer = self.serializer_class(page, many=True)
-            return Response({'last_page': self.queryset.count()//int(self.pagination_class.page_size),
-                             'count': self.queryset.count(),
+            user = request.user
+            queryset = Location.objects.filter(is_active=True, site__site_admin__pk=user.pk)
+            serializer_class = LocationViewSerializer
+            self.pagination_class.page_size = request.GET.get('limit', 10)
+            page = self.paginate_queryset(queryset)
+            serializer = serializer_class(page, many=True)
+            return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
                              'result': serializer.data}, status=status.HTTP_200_OK)
-        except Location.DoesNotExist:
-            return Response({'message': '존재하지 않는 지역 입니다.'}, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
         try:
