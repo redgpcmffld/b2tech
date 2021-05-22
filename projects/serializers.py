@@ -6,7 +6,8 @@ from .models import Location, Resource, Site
 
 
 class LocationSerializer(serializers.ModelSerializer):
-    resource = serializers.PrimaryKeyRelatedField(queryset=Resource.objects.all(), required=True)
+    resource = serializers.PrimaryKeyRelatedField(many=True, queryset=Resource.objects.filter(is_active=True),
+                                                  required=True)
 
     class Meta:
         model = Location

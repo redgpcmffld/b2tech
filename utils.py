@@ -25,7 +25,5 @@ def login_required(func):
 
         except jwt.ExpiredSignatureError:
             return Response({'message': 'EXPIRED_TOKEN'}, status=status.HTTP_401_UNAUTHORIZED)
-        except:
-            return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
 
     return decorator
