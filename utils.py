@@ -14,7 +14,7 @@ def login_required(func):
         try:
             access_token = request.headers['Authorization']
             user = jwt.decode(access_token, SECRET_KEY, algorithms=algorithms)
-            request.user = Admin.objects.get(id=user['admin_id'])
+            request.user = Admin.objects.get(pk=user['admin_id'])
 
             return func(self, request, *args, **kwargs)
 

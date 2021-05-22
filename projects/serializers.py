@@ -1,6 +1,8 @@
+from django.db.models import Sum
+
 from rest_framework import serializers
 
-from .models import Location, Resource
+from .models import Location, Resource, Site
 
 
 class LocationSerializer(serializers.ModelSerializer):
@@ -25,8 +27,8 @@ class LocationViewSerializer(serializers.ModelSerializer):
             'latitude',
             'longitude',
             'range',
-            'is_allow',
+            'is_allow'
         ]
 
     def get_site(self, obj):
-        return {'site_id': obj.site.pk, 'name': obj.site.name}
+        return {'site_id': obj.site.get().pk, 'name': obj.site.get().name}
