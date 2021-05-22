@@ -4,8 +4,8 @@ from django.db import models
 class Project(models.Model):
     project_id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
-    start_date = models.CharField(max_length=10)
-    end_date = models.CharField(max_length=10)
+    start_date = models.DateField()
+    end_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
@@ -18,8 +18,8 @@ class Site(models.Model):
     site_id = models.BigAutoField(primary_key=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    start_date = models.CharField(max_length=10)
-    end_date = models.CharField(max_length=10)
+    start_date = models.DateField()
+    end_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
@@ -45,7 +45,7 @@ class Car(models.Model):
 
 
 class Resource(models.Model):
-    TYPES = (('Ton', '톤'), ('Kg', '킬로그램'), ('m**3', '삼제곱미터'))
+    TYPES = (('Ton', '톤'), ('Kg', '킬로그램'), ('m**3', '세제곱미터'))
 
     resource_id = models.BigAutoField(primary_key=True)
     type = models.CharField(max_length=20)
@@ -64,8 +64,8 @@ class Location(models.Model):
     name = models.CharField(max_length=100)
     address = models.CharField(max_length=100)
     site = models.ManyToManyField(Site)
-    longitude = models.DecimalField(max_digits=20, decimal_places=17)
-    latitude = models.DecimalField(max_digits=20, decimal_places=17)
+    longitude = models.DecimalField(max_digits=15, decimal_places=12)
+    latitude = models.DecimalField(max_digits=15, decimal_places=12)
     type = models.BooleanField()
     resource = models.ManyToManyField(Resource)
     plan = models.IntegerField()
