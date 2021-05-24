@@ -1,4 +1,5 @@
 from django.core import validators
+from django.db.models import Sum
 
 from rest_framework import serializers
 
@@ -27,7 +28,8 @@ class SiteViewSerializer(serializers.ModelSerializer):
 
 
 class LocationSerializer(serializers.ModelSerializer):
-    resource = serializers.PrimaryKeyRelatedField(queryset=Resource.objects.all(), required=True)
+    resource = serializers.PrimaryKeyRelatedField(many=True, queryset=Resource.objects.filter(is_active=True),
+                                                  required=True)
 
     class Meta:
         model = Location
@@ -48,8 +50,8 @@ class LocationViewSerializer(serializers.ModelSerializer):
             'latitude',
             'longitude',
             'range',
-            'is_allow',
+            'is_allow'
         ]
 
     def get_site(self, obj):
-        return {'site_id': obj.site.pk, 'name': obj.site.name}
+        return {'site_id': obj.site.get().pk, 'name': obj.site.get().name}
