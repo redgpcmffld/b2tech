@@ -1,3 +1,5 @@
+from datetime import date
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,19 +10,21 @@ from .serializers import SiteSerializer, SiteViewSerializer
 
 class SiteView(APIView):
     def post(self, request):
-        try:
-            if Site.objects.filter(name=request.data['name']).exists():
-                return Response({'message': 'NAME_EXIST'}, status=status.HTTP_409_CONFLICT)
+        a = request.data['start_date']
+        b = request.data['end_date']
 
-            serializer = SiteSerializer(data=request.data)
+        if a > b:
+            return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
 
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'message': 'SUCCESS'}, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if Site.objects.filter(name=request.data['name']).exists():
+            return Response({'message': 'NAME_EXIST'}, status=status.HTTP_409_CONFLICT)
 
-        except Exception:
-            return Response({'message': Exception}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = SiteSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'SUCCESS'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
         try:
