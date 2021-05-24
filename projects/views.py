@@ -1,42 +1,105 @@
+from datetime import date
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import LocationSerializer, LocationViewSerializer
 from .models import Location, Site
+from .serializers import SiteSerializer, SiteViewSerializer, LocationSerializer, LocationViewSerializer
+
 from utils import login_required
 from pagination import MyPagination
+
+
+class SiteView(APIView, MyPagination):
+    @login_required
+    def get(self, request):
+        admin = request.user
+
+        if admin.type == 'ProjectTotalAdmin':
+            queryset = Site.objects.filter(is_active=True, project__project_admin__pk=admin.pk)
+        else:
+            queryset = Site.objects.filter(is_active=True, Site_admin__pk=admin.pk)
+
+        self.pagination_class.page_size = request.GET.get('limit', 10)
+        page = self.paginate_queryset(queryset)
+        serializer = SiteViewSerializer(page, many=True)
+        return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
+                         'result': serializer.data}, status=status.HTTP_200_OK)
+
+    @login_required
+    def post(self, request):
+        try:
+            request.data['start_date'] = f"{request.data['start_date']}-01"
+            request.data['end_date'] = f"{request.data['end_date']}-01"
+
+            serializer = SiteSerializer(data=request.data)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except KeyError:
+            return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @login_required
+    def put(self, request):
+        try:
+            if request.data.get('site_id') is None:
+                return Response({'message': 'CHECK_SITE_ID'}, status=status.HTTP_400_BAD_REQUEST)
+
+            site = Site.objects.get(pk=request.data['site_id'])
+            serializer = SiteSerializer(site, data=request.data)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'UPDATE_SUCCESS'}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Site.DoesNotExist:
+            return Response({'message': 'SITE_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+
+    @login_required
+    def delete(self, request, site_id):
+        try:
+            site = Site.objects.get(pk=site_id, is_active=True)
+            site.is_active = False
+            site.save()
+            return Response({'message': 'DELETE_SUCCESS'}, status=status.HTTP_204_NO_CONTENT)
+
+        except Site.DoesNotExist:
+            return Response({'message': 'SITE_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class LocationView(APIView, MyPagination):
     @login_required
     def get(self, request):
-        try:
-            admin = request.user
-            if admin.type == 'ProjectTotalAdmin':
-                queryset = Location.objects.filter(is_active=True, site__project__project_admin__pk=admin.pk)
-            else:
-                queryset = Location.objects.filter(is_active=True, site__site_admin__pk=admin.pk)
-            serializer_class = LocationViewSerializer
-            self.pagination_class.page_size = request.GET.get('limit', 10)
-            page = self.paginate_queryset(queryset)
-            serializer = serializer_class(page, many=True)
-            return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
-                             'result': serializer.data}, status=status.HTTP_200_OK)
-        except:
-            return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
+        admin = request.user
+        if admin.type == 'ProjectTotalAdmin':
+            queryset = Location.objects.filter(is_active=True, site__project__project_admin__pk=admin.pk)
+        else:
+            queryset = Location.objects.filter(is_active=True, site__site_admin__pk=admin.pk)
+        self.pagination_class.page_size = request.GET.get('limit', 10)
+        page = self.paginate_queryset(queryset)
+        serializer = LocationViewSerializer(page, many=True)
+        return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
+                         'result': serializer.data}, status=status.HTTP_200_OK)
 
     @login_required
     def post(self, request):
-        if Location.objects.filter(
-                name=request.data['name'],
-                type=request.data['type']).exists():
-            return Response({'message': 'DUPLICATE_LOCATION'}, status=status.HTTP_409_CONFLICT)
-        serializer = LocationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if Location.objects.filter(
+                    name=request.data['name'],
+                    type=request.data['type']).exists():
+                return Response({'message': 'DUPLICATE_LOCATION'}, status=status.HTTP_409_CONFLICT)
+            serializer = LocationSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
 
     @login_required
     def put(self, request):
