@@ -21,9 +21,8 @@ def location_uploader():
     with open(LOCATION_CSV_PATH, newline='', encoding='utf8') as csvfile:	# 4. newline =''
         data_reader = csv.DictReader(csvfile)
         for row in data_reader:
-            Location.objects.create(		# 5. class명.objects.create
+            location = Location.objects.create(		# 5. class명.objects.create
                 name = row['name'],
-                site_id = row['site_id'],
                 address = row['address'],
                 latitude = row['latitude'],
                 longitude = row['longitude'],
@@ -31,6 +30,8 @@ def location_uploader():
                 plan = row['plan'],
                 type = row['type']
             )
+            location.site.add(Site.objects.get(pk=row['site_id']))
+            location.resource.add(Resource.objects.get(pk=row['resource_id']))
 
 # def main_category_uploader():
 #     with open(MAIN_CATEGORY_CSV_PATH, newline='', encoding='utf8') as csvfile:
