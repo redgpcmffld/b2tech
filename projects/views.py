@@ -10,60 +10,69 @@ from .serializers import CarSerializer, CarViewSerializer, SiteSerializer, SiteV
 
 
 class CarTypeView(APIView):
+    @login_required
     def get(self, request):
         return Response(Car.TYPES)
 
 
-class CarView(APIView):
+class CarView(APIView, MyPagination):
+    @login_required
+    def get(self, request):
+        admin = request.user
+
+        if admin.type == 'ProjectTotalAdmin':
+            queryset = Car.objects.filter(is_active=True, site__project__project_admin__pk=admin.pk)
+        else:
+            queryset = Car.objects.filter(is_active=True, site__site_admin__pk=admin.pk)
+
+        self.pagination_class.page_size = request.GET.get('limit', 10)
+        page = self.paginate_queryset(queryset)
+        serializer = CarViewSerializer(page, many=True)
+
+        return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
+                         'result': serializer.data}, status=status.HTTP_200_OK)
+
+    @login_required
     def post(self, request):
         try:
-            if Car.objects.filter(number=request.data['number']):
-                return Response({'message': 'NUMBER_EXIST'}, status=status.HTTP_409_CONFLICT)
-
             serializer = CarSerializer(data=request.data)
 
             if serializer.is_valid():
                 serializer.save()
-                return Response({'message': 'SUCCESS'}, status=status.HTTP_201_CREATED)
+                return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        except Exception:
-            return Response({'message': Exception}, status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request):
-        try:
-            cars = Car.objects.filter(is_active=True)
-            serializer = CarViewSerializer(cars, many=True)
-
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        except Car.DoesNotExist:
-            return Response({'message': 'DATA_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
-
+    @login_required
     def put(self, request):
         try:
-            if Car.objects.filter(pk=request.data['car_id']).exists():
-                car = Car.objects.get(pk=request.data['car_id'])
+            if request.data.get('car_id') is None:
+                return Response({'message': 'CHECK_CAR_ID'}, status=status.HTTP_400_BAD_REQUEST)
+
+            car = Car.objects.get(pk=request.data['car_id'])
 
             serializer = CarSerializer(car, data=request.data)
 
             if serializer.is_valid():
                 serializer.save()
-                return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK)
+                return Response({'message': 'UPDATE_SUCCESS'}, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        except KeyError:
-            return Response({'message': 'CHECK_YOUR_INPUT'}, status=status.HTTP_400_BAD_REQUEST)
+        except Car.DoesNotExist:
+            return Response({'message': 'CAR_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
 
+    @login_required
     def delete(self, request, car_id):
         try:
             car = Car.objects.get(pk=car_id, is_active=True)
             car.is_active = False
             car.save()
-            return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK)
+            return Response({'message': 'DELETE_SUCCESS'}, status=status.HTTP_204_NO_CONTENT)
 
         except Car.DoesNotExist:
-            return Response({'message': 'CHECK_YOUR_INPUT'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'CAR_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class SiteView(APIView, MyPagination):
@@ -87,6 +96,9 @@ class SiteView(APIView, MyPagination):
         try:
             request.data['start_date'] = f"{request.data['start_date']}-01"
             request.data['end_date'] = f"{request.data['end_date']}-01"
+
+            if request.data['start_date'] > request.data['end_date']:
+                return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
 
             serializer = SiteSerializer(data=request.data)
 
