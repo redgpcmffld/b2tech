@@ -1,7 +1,10 @@
 from django.urls import path
-from .views import SiteView, LocationView
+from .views import CarView, CarTypeView, SiteView, LocationView
 
 urlpatterns = [
+    path('/cars/types', CarTypeView.as_view(), name='car_types_list'),
+    path('/cars/<int:car_id>', CarView.as_view(), name='delete_car'),
+    path('/cars', CarView.as_view(), name='create_car|update_car|read_car'),
     path('/sites/<int:site_id>', SiteView.as_view(), name='delete_site'),
     path('/sites', SiteView.as_view(), name='create_site|update_site|read_site'),
     path('/locations/<int:location_id>', LocationView.as_view(), name='delete_location'),

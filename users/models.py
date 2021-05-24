@@ -3,7 +3,6 @@ from django.db import models
 
 class Admin(models.Model):
     TYPES = (('ProjectTotalAdmin', '프로젝트 전체 관리자'), ('SiteAdmin', '현장 관리자'))
-
     admin_id = models.BigAutoField(primary_key=True)
     account_name = models.CharField(max_length=20)
     type = models.CharField(max_length=20, choices=TYPES)
