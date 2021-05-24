@@ -1,7 +1,11 @@
 from django.urls import path
-from .views import CarView, CarTypeView, SiteView, LocationView
+
+from .views import ResourceView, ResourceTypeView, CarView, CarTypeView, SiteView, LocationView
 
 urlpatterns = [
+    path('/resources/types', ResourceTypeView.as_view(), name='resource_types_list'),
+    path('/resources/<int:resource_id>', ResourceView.as_view(), name='delete_resource'),
+    path('/resources', ResourceView.as_view(), name='create_resource|update_resource|read_resource'),
     path('/cars/types', CarTypeView.as_view(), name='car_types_list'),
     path('/cars/<int:car_id>', CarView.as_view(), name='delete_car'),
     path('/cars', CarView.as_view(), name='create_car|update_car|read_car'),
