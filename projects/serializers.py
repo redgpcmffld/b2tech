@@ -1,8 +1,8 @@
+from django.core import validators
 from rest_framework import serializers
 
-from .models import Car, Site, Location, Resource, Project
-from users.models import Driver
-from django.core import validators
+from .models import Location, Resource, Project, Site, Car
+from users.models import Driver, Admin
 
 
 class SiteAdminViewSerializer(serializers.ModelSerializer):
@@ -28,8 +28,8 @@ class ProjectViewSerializer(serializers.ModelSerializer):
 
 
 class CarSerializer(serializers.ModelSerializer):
-    site = serializers.PrimaryKeyRelatedField(queryset=Site.objects.all())
-    driver = serializers.PrimaryKeyRelatedField(many=True, queryset=Driver.objects.all())
+    site = serializers.PrimaryKeyRelatedField(queryset=Site.objects.filter(is_active=True))
+    driver = serializers.PrimaryKeyRelatedField(many=True, queryset=Driver.objects.filter(is_active=True))
 
     class Meta:
         model = Car
@@ -59,15 +59,21 @@ class CarViewSerializer(serializers.ModelSerializer):
                 'name': obj.driver.get().name}
 
 
+class MyDateField(serializers.DateField):
+
+    def to_internal_value(self, value):
+        return f'{value}-01'
+
+
 class SiteSerializer(serializers.ModelSerializer):
+    start_date = MyDateField()
+    end_date = MyDateField()
+
     class Meta:
         model = Site
         fields = '__all__'
 
     def validate_name(self, attrs):
-        if Site.objects.filter(name=attrs).exists():
-            raise validators.ValidationError('DUPLICATE_NAME')
-
         validators.RegexValidator(r'^[가-힣a-zA-Z0-9\s]{1,50}$', 'INVALID_NAME')(attrs)
         return attrs
 

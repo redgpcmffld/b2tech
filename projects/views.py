@@ -183,11 +183,11 @@ class SiteView(APIView, MyPagination):
     @login_required
     def post(self, request):
         try:
-            # request.data['start_date'] = f"{request.data['start_date']}-01"
-            # request.data['end_date'] = f"{request.data['end_date']}-01"
+            if Site.objects.filter(name=request.data['name']).exists():
+                return Response({'message': 'DUPLICATE_NAME'}, status=status.HTTP_400_BAD_REQUEST)
 
             if request.data['start_date'] > request.data['end_date']:
-                return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': 'INVALID_DATE'}, status=status.HTTP_400_BAD_REQUEST)
 
             serializer = SiteSerializer(data=request.data)
 

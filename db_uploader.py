@@ -3,35 +3,36 @@ import os
 import sys
 import django
 
-
 os.chdir(".")
 
 print("Current dir=", end=""), print(os.getcwd())
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # print("BASE_DIR=", end=""), print(BASE_DIR)
 sys.path.append(BASE_DIR)
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "b2tech.settings")	# 1. 여기서 프로젝트명.settings입력
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "b2tech.settings")  # 1. 여기서 프로젝트명.settings입력
 django.setup()
 
 from projects.models import *
 
-LOCATION_CSV_PATH = 'homes.csv'
+LOCATION_CSV_PATH = 'homes_2.csv'
+
 
 def location_uploader():
-    with open(LOCATION_CSV_PATH, newline='', encoding='utf8') as csvfile:	# 4. newline =''
+    with open(LOCATION_CSV_PATH, newline='', encoding='utf8') as csvfile:  # 4. newline =''
         data_reader = csv.DictReader(csvfile)
         for row in data_reader:
-            location = Location.objects.create(		# 5. class명.objects.create
-                name = row['name'],
-                address = row['address'],
-                latitude = row['latitude'],
-                longitude = row['longitude'],
-                range = row['range'],
-                plan = row['plan'],
-                type = row['type']
+            location = Location.objects.create(  # 5. class명.objects.create
+                name=row['name'],
+                address=row['address'],
+                latitude=row['latitude'],
+                longitude=row['longitude'],
+                range=row['range'],
+                plan=row['plan'],
+                type=row['type']
             )
             location.site.add(Site.objects.get(pk=row['site_id']))
             location.resource.add(Resource.objects.get(pk=row['resource_id']))
+
 
 # def main_category_uploader():
 #     with open(MAIN_CATEGORY_CSV_PATH, newline='', encoding='utf8') as csvfile:
