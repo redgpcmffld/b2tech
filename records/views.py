@@ -1,9 +1,12 @@
+from django.db.models import Sum, Max
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from .models import DriveRecord, DriveRoute
-from .serializers import DriveStartSerializer, DriveRecordViewSerializer, DriveEndSerializer
+from projects.models import Project, Site
+from .serializers import DriveStartSerializer, DriveRecordViewSerializer, DriveEndSerializer, ProgressSerializer
 from utils import login_required
 from pagination import MyPagination
 
@@ -53,3 +56,17 @@ class DriveEndView(APIView):
             serializer.save()
             return Response({'message': 'UPDATE_SUCCESS'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProgressView(APIView):
+    @login_required
+    def get(self, request):
+        admin = request.user
+        if admin.type == 'ProjectTotalAdmin':
+            sites = Site.objects.filter(is_active=True, project__project_admin__pk=admin.pk)
+        else:
+            sites = Site.objects.filter(is_active=True, site_admin__pk=admin.pk)
+
+        serializer = ProgressSerializer(sites, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
