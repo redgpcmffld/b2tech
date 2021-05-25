@@ -1,3 +1,6 @@
+from django.views import View
+from django.http import JsonResponse
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -5,32 +8,47 @@ from rest_framework import status
 from utils import login_required
 from pagination import MyPagination
 from .models import Resource, Car, Location, Site, Project
-from .serializers import ResourceSerializer, ResourceViewSerializer, CarSerializer, CarViewSerializer, SiteSerializer, \
-    SiteViewSerializer, LocationSerializer, LocationViewSerializer, ProjectViewSerializer, SiteAdminViewSerializer
+from .serializers import (
+    ResourceSerializer,
+    ResourceViewSerializer,
+    CarSerializer,
+    CarViewSerializer,
+    SiteSerializer,
+    SiteViewSerializer,
+    LocationSerializer,
+    LocationViewSerializer,
+)
 
 
-class ProjectAdminView(APIView):
+class ProjectSiteView(View):
     @login_required
     def get(self, request):
         admin = request.user
         if admin.type == 'ProjectTotalAdmin':
-            project = Project.objects.filter(is_active=True, project_admin=admin.pk)
 
-            serializer = ProjectViewSerializer(project, many=True)
+            data = [{
+                'project_id': project.pk,
+                'name': project.name,
+                'site': [{
+                    'site_id': site.pk,
+                    'name': site.name
+                } for site in project.site_set.all()]
+            } for project in Project.objects.filter(is_active=True, project_admin__pk=admin.pk)]
 
-            return Response({'project_list': serializer.data}, status=status.HTTP_200_OK)
+            return JsonResponse({'result': data}, status=200)
 
-
-class SiteAdminView(APIView):
-    @login_required
-    def get(self, request):
-        admin = request.user
         if admin.type == 'SiteAdmin':
-            site = Site.objects.filter(is_active=True, site_admin=admin.pk)
 
-            serializer = SiteAdminViewSerializer(site, many=True)
+            data = [{
+                'project': {
+                    'project_id': site.project.pk,
+                    'name': site.project.name
+                },
+                'site_id': site.pk,
+                'name' : site.name,
+            } for site in Site.objects.filter(is_active=True, site_admin__pk=admin.pk)]
 
-            return Response({'site_list': serializer.data}, status=status.HTTP_200_OK)
+            return JsonResponse({'result': data}, status=200)
 
 
 class ResourceTypeView(APIView):
@@ -172,7 +190,7 @@ class SiteView(APIView, MyPagination):
         if admin.type == 'ProjectTotalAdmin':
             queryset = Site.objects.filter(is_active=True, project__project_admin__pk=admin.pk)
         else:
-            queryset = Site.objects.filter(is_active=True, Site_admin__pk=admin.pk)
+            queryset = Site.objects.filter(is_active=True, site_admin__pk=admin.pk)
 
         self.pagination_class.page_size = request.GET.get('limit', 10)
         page = self.paginate_queryset(queryset)
@@ -183,11 +201,11 @@ class SiteView(APIView, MyPagination):
     @login_required
     def post(self, request):
         try:
-            # request.data['start_date'] = f"{request.data['start_date']}-01"
-            # request.data['end_date'] = f"{request.data['end_date']}-01"
-
             if request.data['start_date'] > request.data['end_date']:
                 return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if Site.objects.filter(name=request.data['name']).exists():
+                return Response({'message': 'DUPLICATE_NAME'}, status=status.HTTP_409_CONFLICT)
 
             serializer = SiteSerializer(data=request.data)
 
