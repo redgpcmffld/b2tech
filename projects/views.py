@@ -6,7 +6,31 @@ from utils import login_required
 from pagination import MyPagination
 from .models import Resource, Car, Location, Site, Project
 from .serializers import ResourceSerializer, ResourceViewSerializer, CarSerializer, CarViewSerializer, SiteSerializer, \
-    SiteViewSerializer, LocationSerializer, LocationViewSerializer
+    SiteViewSerializer, LocationSerializer, LocationViewSerializer, ProjectViewSerializer, SiteAdminViewSerializer
+
+
+class ProjectAdminView(APIView):
+    @login_required
+    def get(self, request):
+        admin = request.user
+        if admin.type == 'ProjectTotalAdmin':
+            project = Project.objects.filter(is_active=True, project_admin=admin.pk)
+
+            serializer = ProjectViewSerializer(project, many=True)
+
+            return Response({'project_list': serializer.data}, status=status.HTTP_200_OK)
+
+
+class SiteAdminView(APIView):
+    @login_required
+    def get(self, request):
+        admin = request.user
+        if admin.type == 'SiteAdmin':
+            site = Site.objects.filter(is_active=True, site_admin=admin.pk)
+
+            serializer = SiteAdminViewSerializer(site, many=True)
+
+            return Response({'site_list': serializer.data}, status=status.HTTP_200_OK)
 
 
 class ResourceTypeView(APIView):
