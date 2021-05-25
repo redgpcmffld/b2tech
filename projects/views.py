@@ -24,6 +24,7 @@ class ProjectSiteView(View):
     @login_required
     def get(self, request):
         admin = request.user
+
         if admin.type == 'ProjectTotalAdmin':
             data = [{
                 'project_id': project.pk,
@@ -141,6 +142,9 @@ class CarView(APIView, MyPagination):
     def post(self, request):
         try:
             serializer = CarSerializer(data=request.data)
+
+            if Car.objects.filter(number=request.data['number']):
+                return Response({'message': 'DUPLICATE_NUMBER'}, status=status.HTTP_409_CONFLICT)
 
             if serializer.is_valid():
                 serializer.save()

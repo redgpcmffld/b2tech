@@ -2,8 +2,8 @@ from django.core import validators
 
 from rest_framework import serializers
 
-from .models import Location, Resource, Project, Site, Car
-from users.models import Driver, Admin
+from .models import Location, Resource, Site, Car
+from users.models import Driver
 
 
 class CarSerializer(serializers.ModelSerializer):
@@ -15,9 +15,6 @@ class CarSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate_number(self, attrs):
-        if Car.objects.filter(number=attrs):
-            raise validators.ValidationError('DUPLICATE_NUMBER')
-
         validators.RegexValidator(r'^[가-힣]{2}\d{2}[가-힣]{1}\d{4}$', 'INVALID_NUMBER')(attrs)
         return attrs
 
