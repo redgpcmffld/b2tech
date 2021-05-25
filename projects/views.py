@@ -25,7 +25,6 @@ class ProjectSiteView(View):
     def get(self, request):
         admin = request.user
         if admin.type == 'ProjectTotalAdmin':
-
             data = [{
                 'project_id': project.pk,
                 'name': project.name,
@@ -38,14 +37,13 @@ class ProjectSiteView(View):
             return JsonResponse({'result': data}, status=200)
 
         if admin.type == 'SiteAdmin':
-
             data = [{
                 'project': {
                     'project_id': site.project.pk,
                     'name': site.project.name
                 },
                 'site_id': site.pk,
-                'name' : site.name,
+                'name': site.name,
             } for site in Site.objects.filter(is_active=True, site_admin__pk=admin.pk)]
 
             return JsonResponse({'result': data}, status=200)
@@ -202,7 +200,7 @@ class SiteView(APIView, MyPagination):
     def post(self, request):
         try:
             if request.data['start_date'] > request.data['end_date']:
-                return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': 'INVALID_DATE'}, status=status.HTTP_400_BAD_REQUEST)
 
             if Site.objects.filter(name=request.data['name']).exists():
                 return Response({'message': 'DUPLICATE_NAME'}, status=status.HTTP_409_CONFLICT)

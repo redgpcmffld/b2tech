@@ -1,13 +1,14 @@
+from django.core import validators
+
 from rest_framework import serializers
 
-from .models import Car, Site, Location, Resource
-from users.models import Driver
-from django.core import validators
+from .models import Location, Resource, Project, Site, Car
+from users.models import Driver, Admin
 
 
 class CarSerializer(serializers.ModelSerializer):
-    site = serializers.PrimaryKeyRelatedField(queryset=Site.objects.all())
-    driver = serializers.PrimaryKeyRelatedField(many=True, queryset=Driver.objects.all())
+    site = serializers.PrimaryKeyRelatedField(queryset=Site.objects.filter(is_active=True))
+    driver = serializers.PrimaryKeyRelatedField(many=True, queryset=Driver.objects.filter(is_active=True))
 
     class Meta:
         model = Car
@@ -37,7 +38,16 @@ class CarViewSerializer(serializers.ModelSerializer):
                 'name': obj.driver.get().name}
 
 
+class MyDateField(serializers.DateField):
+
+    def to_internal_value(self, value):
+        return f'{value}-01'
+
+
 class SiteSerializer(serializers.ModelSerializer):
+    start_date = MyDateField()
+    end_date = MyDateField()
+
     class Meta:
         model = Site
         fields = '__all__'
