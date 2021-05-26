@@ -30,27 +30,24 @@ class SignupView(APIView):
 
 class SigninView(APIView):
     def post(self, request):
-        try:
-            data = request.data
-            account_name = data['account_name']
-            password = data['password']
+        data = request.data
+        account_name = data['account_name']
+        password = data['password']
 
-            if not Admin.objects.filter(account_name=account_name).exists():
-                return Response({'message': 'ACCOUNT_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+        if not Admin.objects.filter(account_name=account_name).exists():
+            return Response({'message': 'ACCOUNT_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
 
-            admin = Admin.objects.get(account_name=account_name)
+        admin = Admin.objects.get(account_name=account_name)
 
-            if not bcrypt.checkpw(password.encode('utf-8'), admin.password.encode('utf-8')):
-                return Response({'message': 'INVALID_PASSWORD'}, status=status.HTTP_401_UNAUTHORIZED)
+        if not bcrypt.checkpw(password.encode('utf-8'), admin.password.encode('utf-8')):
+            return Response({'message': 'INVALID_PASSWORD'}, status=status.HTTP_401_UNAUTHORIZED)
 
-            access_token = jwt.encode(
-                {'admin_id': admin.pk,
-                 'exp': datetime.utcnow() + timedelta(seconds=30000)}, SECRET_KEY,
-                algorithm=algorithms)
+        access_token = jwt.encode(
+            {'admin_id': admin.pk,
+             'exp': datetime.utcnow() + timedelta(seconds=30000000)}, SECRET_KEY,
+            algorithm=algorithms)
 
-            return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK, headers={'token': access_token})
-        except:
-            return Response({'message': 'BAD_REQUEST'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK, headers={'token': access_token})
 
 
 class DriverView(APIView, MyPagination):
