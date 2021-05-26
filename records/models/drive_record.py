@@ -1,11 +1,34 @@
-from datetime import datetime, date, timedelta
-from django.db.models import Sum, Min, Max, Avg, When, F, Q
+from datetime import date, datetime
+
+from django.db import models
+from django.db.models import Sum
 
 from rest_framework import serializers
 
-from projects.models import Project, Site, Location, Car
-from users.models import Admin
-from .models import DriveRecord, DriveRoute
+from projects.models.car import Car
+from projects.models.location import Location
+
+
+class DriveRecord(models.Model):
+    STATUS = ((1, '상차'), (2, '정상종료'), (3, '강제하차승인요청'), (4, '강제하차확인'))
+    drive_record_id = models.BigAutoField(primary_key=True)
+    car = models.ForeignKey(Car, on_delete=models.SET_NULL, null=True)
+    loading_location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True,
+                                         related_name='loading_location')
+    unloading_location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True,
+                                           related_name='unloading_location')
+    transport_weight = models.IntegerField()
+    loading_time = models.DateTimeField()
+    unloading_time = models.DateTimeField(null=True)
+    driving_date = models.DateField()
+    total_distance = models.DecimalField(max_digits=10, decimal_places=4, null=True)
+    status = models.SmallIntegerField(default=1, choices=STATUS)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'drive_records'
 
 
 class DriveRecordViewSerializer(serializers.ModelSerializer):
@@ -93,11 +116,15 @@ class DriveStartSerializer(serializers.ModelSerializer):
             'status'
         ]
 
+    def get_total_distance(self, obj):
+        result = obj.driveroute_set.aggregate(Sum('distance'))['distance__sum']
+        obj.total_distance = result
+        return obj.total_distance
+
 
 class DriveEndSerializer(serializers.ModelSerializer):
     unloading_time = serializers.DateTimeField(default=datetime.now())
     status = serializers.IntegerField(max_value=4, min_value=1)
-    total_distance = serializers.SerializerMethodField(method_name='get_total_distance')
 
     class Meta:
         model = DriveRecord
@@ -106,71 +133,3 @@ class DriveEndSerializer(serializers.ModelSerializer):
             'status',
             'total_distance'
         ]
-
-    def get_total_distance(self, obj):
-        result = obj.driveroute_set.aggregate(Sum('distance'))['distance__sum']
-        obj.total_distance = result
-        return obj.total_distance
-
-
-class ProgressSerializer(serializers.Serializer):
-    site_id = serializers.IntegerField(read_only=True)
-    site_name = serializers.SerializerMethodField(method_name='get_site_name')
-    progress = serializers.SerializerMethodField(method_name='get_progress')
-    site_coordinate = serializers.SerializerMethodField(method_name='get_site_coordinate')
-
-    class Meta:
-        model = Site
-        fields = [
-            'site_id',
-            'site_name',
-            'percent',
-            'weight',
-            'site_coordinate'
-        ]
-
-    def get_progress(self, obj):
-        site_max_plan = self.instance.annotate(site_plan=Sum('location__plan')).aggregate(Max('site_plan'))[
-            'site_plan__max']
-        plan = obj.location_set.aggregate(Sum('plan'))['plan__sum']
-        site_plan = int(plan / site_max_plan * 5)
-        today_workloads = obj.location_set.filter(is_active=True).aggregate(
-            today_workloads=Sum('loading_location__transport_weight',
-                                filter=Q(loading_location__driving_date=date.today()) & Q(loading_location__status=2)))[
-            'today_workloads']
-        days = (date.fromisoformat(obj.end_date) - date.fromisoformat(obj.start_date)).days
-        today_plan = plan // days
-        if today_workloads is None:
-            today_workloads = 0
-        progress = int(today_workloads / today_plan * 5)
-        if progress == 0:
-            progress = 1
-        if site_plan == 0:
-            site_plan = 1
-        result = {
-            'weight': site_plan,
-            'percent': progress
-        }
-
-        return result
-
-    def get_site_coordinate(self, obj):
-        site_coordinates = obj.location_set.filter(is_active=True).aggregate(Min('longitude'), Max('longitude'),
-                                                                             Min('latitude'), Max('latitude'))
-        if site_coordinates['longitude__min'] and \
-                site_coordinates['longitude__max'] and \
-                site_coordinates['latitude__min'] and \
-                site_coordinates['latitude__max'] is None:
-            return {'longitude': 0, 'latitude': 0}
-        result = {
-            'longitude': (site_coordinates['longitude__min'] +
-                          (site_coordinates['longitude__max'] - site_coordinates['longitude__min'])
-                          // 2),
-            'latitude': (site_coordinates['latitude__min'] +
-                         (site_coordinates['latitude__max'] - site_coordinates['latitude__min'])
-                         // 2)
-        }
-        return result
-
-    def get_site_name(self, obj):
-        return obj.name

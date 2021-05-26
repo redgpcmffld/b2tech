@@ -1,14 +1,17 @@
-from django.db.models import Sum, Max
 from django.http import JsonResponse
 from django.views import View
+from django.db.models import Sum
+
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import DriveRecord, DriveRoute
-from projects.models import Project, Site
-from .serializers import DriveStartSerializer, DriveRecordViewSerializer, DriveEndSerializer, ProgressSerializer
+from ..models.drive_record import DriveRecord, DriveRecordViewSerializer, DriveEndSerializer, DriveStartSerializer
+from ..models.drive_route import DriveRouteSerializer
+
+from projects.models.location import Location
+
 from utils import login_required
 from pagination import MyPagination
 
@@ -29,10 +32,23 @@ class GraphView(View):
 class DriveStartView(APIView):
     @login_required
     def post(self, request):
+        if Location.objects.get(pk=request.data.get('loading_location')).resource.get().pk != Location.objects.get(
+                pk=request.data.get('unloading_location')).resource.get().pk:
+            return Response({'message': 'INVALID_LOCATION'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = DriveStartSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)
+            drive_route = {
+                'drive_record': serializer.instance.pk,
+                'longitude': float(serializer.instance.loading_location.longitude),
+                'latitude': float(serializer.instance.loading_location.latitude),
+                'distance': 0
+            }
+            drive_route_serializer = DriveRouteSerializer(data=drive_route)
+            if drive_route_serializer.is_valid():
+                drive_route_serializer.save()
+                return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -66,22 +82,11 @@ class DriveEndView(APIView):
         if request.data.get('drive_record_id') is None:
             return Response({'message': 'RECORD_NOT_FOUND'}, status=status.HTTP_400_BAD_REQUEST)
         drive_record = DriveRecord.objects.get(pk=request.data['drive_record_id'])
+        request.data['total_distance'] = \
+            drive_record.driveroute_set.filter(is_active=True).aggregate(total_distance=Sum('distance'))[
+                'total_distance']
         serializer = DriveEndSerializer(instance=drive_record, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({'message': 'UPDATE_SUCCESS'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ProgressView(APIView):
-    @login_required
-    def get(self, request):
-        admin = request.user
-        if admin.type == 'ProjectTotalAdmin':
-            sites = Site.objects.filter(is_active=True, project__project_admin__pk=admin.pk)
-        else:
-            sites = Site.objects.filter(is_active=True, site_admin__pk=admin.pk)
-
-        serializer = ProgressSerializer(sites, many=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
