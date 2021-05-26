@@ -6,7 +6,6 @@ from rest_framework import status
 
 from ..models.drive_record import DriveRecord, DriveRecordViewSerializer, DriveEndSerializer, DriveStartSerializer
 from ..models.drive_route import DriveRouteSerializer
-
 from projects.models.location import Location
 
 from utils import login_required

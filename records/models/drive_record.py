@@ -41,6 +41,7 @@ class DriveRecordViewSerializer(serializers.ModelSerializer):
     transport_weight = serializers.SerializerMethodField(method_name='get_transport_weight')
     car = serializers.SerializerMethodField(method_name='get_car_driver_name')
     status = serializers.SerializerMethodField(method_name='get_status_name')
+    total_distance = serializers.SerializerMethodField(method_name='get_total_distance')
 
     class Meta:
         model = DriveRecord
@@ -91,6 +92,11 @@ class DriveRecordViewSerializer(serializers.ModelSerializer):
     def get_status_name(self, obj):
         STATUS = ('상차', '정상종료', '강제하차승인요청' '강제하차확인')
         return STATUS[obj.status - 1]
+
+    def get_total_distance(self, obj):
+        if obj.total_distance is None:
+            obj.total_distance = "%.4f" % 0
+        return f'{obj.total_distance}km'
 
 
 class DriveStartSerializer(serializers.ModelSerializer):
