@@ -11,9 +11,13 @@ class GraphView(View):
     def get(self, request):
         admin = request.user
 
-        result = [{
-            'type': drive.unloading_location.resource.get().type
-        } for drive in DriveRecord.objects.filter(is_active=True, status__in=[2, 4],
-                                                  car__site__project__project_admin__pk=admin.pk)]
+        drive = DriveRecord.objects.filter(is_active=True, status__in=[2, 4],
+                                           car__site__project__project_admin__pk=admin.pk,
+                                           unloading_location__resource__type='Iron')
 
-        return JsonResponse({'result': result}, status=200)
+        month_list = []
+        for month in drive:
+            if month.driving_date.month == 5:
+                month_list.append(month.driving_date.month)
+
+        return JsonResponse({'Iron': len(month_list)}, status=200)

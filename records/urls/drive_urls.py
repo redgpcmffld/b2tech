@@ -1,7 +1,8 @@
 from django.urls import path
 from ..views.drive_route_view import DriveRouteView
-from ..views.dirve_record_view import DriveRecordView, DriveStartView, DriveEndView, GraphView
+from ..views.dirve_record_view import DriveRecordView, DriveStartView, DriveEndView
 from ..views.progress_view import ProgressView
+from ..views.graph_view import GraphView
 
 urlpatterns = [
     path('/graph', GraphView.as_view()),
