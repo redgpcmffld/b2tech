@@ -93,11 +93,15 @@ class DriveStartSerializer(serializers.ModelSerializer):
             'status'
         ]
 
+    def get_total_distance(self, obj):
+        result = obj.driveroute_set.aggregate(Sum('distance'))['distance__sum']
+        obj.total_distance = result
+        return obj.total_distance
+
 
 class DriveEndSerializer(serializers.ModelSerializer):
     unloading_time = serializers.DateTimeField(default=datetime.now())
     status = serializers.IntegerField(max_value=4, min_value=1)
-    total_distance = serializers.SerializerMethodField(method_name='get_total_distance')
 
     class Meta:
         model = DriveRecord
@@ -106,11 +110,6 @@ class DriveEndSerializer(serializers.ModelSerializer):
             'status',
             'total_distance'
         ]
-
-    def get_total_distance(self, obj):
-        result = obj.driveroute_set.aggregate(Sum('distance'))['distance__sum']
-        obj.total_distance = result
-        return obj.total_distance
 
 
 class ProgressSerializer(serializers.Serializer):
@@ -174,3 +173,21 @@ class ProgressSerializer(serializers.Serializer):
 
     def get_site_name(self, obj):
         return obj.name
+
+
+class DriveRouteSerializer(serializers.ModelSerializer):
+    latitude = serializers.DecimalField(max_digits=15, decimal_places=12)
+    longitude = serializers.DecimalField(max_digits=15, decimal_places=12)
+
+    class Meta:
+        model = DriveRoute
+        fields = '__all__'
+
+
+class DriveRouteViewSerializer(serializers.Serializer):
+    class Meta:
+        model = DriveRecord
+        fields = [
+            'latitude',
+            'longitude'
+        ]
