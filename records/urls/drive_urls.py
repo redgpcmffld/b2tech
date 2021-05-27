@@ -9,5 +9,6 @@ urlpatterns = [
     path('/start', DriveStartView.as_view(), name='create_drive_record'),
     path('/end', DriveEndView.as_view(), name='update_drive_record'),
     path('/progress', ProgressView.as_view(), name='read_progress'),
-    path('/routes', DriveRouteView.as_view(), name='create_drive_route')
+    path('/routes/<int:drive_record_id>', DriveRouteView.as_view(), name='read_drive_route_detail'),
+    path('/routes', DriveRouteView.as_view(), name='create_drive_route|read_drive_routes')
 ]
