@@ -1,12 +1,13 @@
 from datetime import date, datetime
 
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Q
 
 from rest_framework import serializers
 
 from projects.models.car import Car
 from projects.models.location import Location
+from projects.models.site import Site
 
 
 class DriveRecord(models.Model):
@@ -122,10 +123,30 @@ class DriveStartSerializer(serializers.ModelSerializer):
             'status'
         ]
 
-    def get_total_distance(self, obj):
-        result = obj.driveroute_set.aggregate(Sum('distance'))['distance__sum']
-        obj.total_distance = result
-        return obj.total_distance
+    def validate(self, data):
+        admin = self.context.get('admin')
+        car_pk = self.context.get('car_pk')
+        loading_location = data['loading_location']
+        unloading_location = data['unloading_location']
+        q = Q(is_active=True)
+        if admin.type == 'ProjectTotalAdmin':
+            q.add(Q(project__project_admin__pk=admin.pk), q.AND)
+            loading_location_site_check = Site.objects.filter(q, location__pk=loading_location.pk).exists()
+            unloading_location_site_check = Site.objects.filter(q, location__pk=unloading_location.pk).exists()
+            car_site_check = Site.objects.filter(q, car__pk=car_pk).exists()
+            if not loading_location_site_check or unloading_location_site_check or car_site_check:
+                raise serializers.ValidationError('INVALID_LOCATION')
+        elif admin.type == 'SiteAdmin':
+            q.add(Q(site_admin__pk=admin.pk), q.AND)
+            loading_location_site_check = Site.objects.filter(q, location__pk=loading_location.pk).exists()
+            unloading_location_site_check = Site.objects.filter(q, location__pk=unloading_location.pk).exists()
+            car_site_check = Site.objects.filter(q, car__pk=car_pk).exists()
+            if not loading_location_site_check or unloading_location_site_check or car_site_check:
+                raise serializers.ValidationError('INVALID_LOCATION')
+
+        if loading_location.resource.get(is_active=True).pk != unloading_location.resource.get(is_active=True).pk:
+            raise serializers.ValidationError('INVALID_LOCATION_RESOURCE')
+        return data
 
 
 class DriveEndSerializer(serializers.ModelSerializer):
