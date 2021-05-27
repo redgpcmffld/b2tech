@@ -82,11 +82,21 @@ class DriveRouteViewSerializer(serializers.Serializer):
         return result
 
     def get_drive_route_info(self, drive_record):
-        result = [
-            {
-                'pk': drive_route['pk'],
-                'longitude': drive_route['longitude'],
-                'latitude': drive_route['latitude']
-            }
-            for drive_route in drive_record.driveroute_set.values('pk', 'longitude', 'latitude') if not None]
+        if str(type(self.instance)) == "<class 'records.models.drive_record.DriveRecord'>":
+            result = [
+                {
+                    'pk': drive_route['pk'],
+                    'longitude': drive_route['longitude'],
+                    'latitude': drive_route['latitude']
+                }
+                for drive_route in drive_record.driveroute_set.values('pk', 'longitude', 'latitude') if not None]
+            return result
+        if not drive_record.driveroute_set.filter(is_active=True).exists():
+            return None
+        drive_route = drive_record.driveroute_set.values('pk', 'longitude', 'latitude').last()
+        result = {
+            'pk': drive_route['pk'],
+            'longitude': drive_route['longitude'],
+            'latitude': drive_route['latitude']
+        }
         return result
