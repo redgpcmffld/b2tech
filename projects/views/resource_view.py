@@ -9,6 +9,12 @@ from utils import login_required
 from pagination import MyPagination
 
 
+class ResourceBlockView(APIView):
+    @login_required
+    def get(self, request):
+        return Response(Resource.BLOCK_UNITS)
+
+
 class ResourceTypeView(APIView):
     @login_required
     def get(self, request):
