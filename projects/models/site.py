@@ -26,7 +26,7 @@ class MyDateField(serializers.DateField):
         return f'{value}-01'
 
 
-class SiteSerializer(serializers.ModelSerializer):
+class SiteCreateSerializer(serializers.ModelSerializer):
     start_date = MyDateField()
     end_date = MyDateField()
 

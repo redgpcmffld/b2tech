@@ -6,8 +6,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from ..models.drive_record import DriveRecord, DriveRecordViewSerializer, DriveEndSerializer, DriveStartSerializer
-from ..models.drive_route import DriveRouteSerializer
+from ..models.drive_record import DriveRecord, DriveRecordViewSerializer, DriveEndCreateSerializer, \
+    DriveStartCreateSerializer
+from ..models.drive_route import DriveRouteCreateSerializer
 from projects.models.location import Location
 
 from utils import login_required
@@ -20,7 +21,7 @@ class DriveStartView(APIView):
         try:
             admin = request.user
             car_pk = request.data['car']
-            serializer = DriveStartSerializer(data=request.data, context={'admin': admin, 'car_pk': car_pk})
+            serializer = DriveStartCreateSerializer(data=request.data, context={'admin': admin, 'car_pk': car_pk})
             if serializer.is_valid():
                 serializer.save()
                 drive_route = {
@@ -28,7 +29,7 @@ class DriveStartView(APIView):
                     'longitude': float(serializer.instance.loading_location.longitude),
                     'latitude': float(serializer.instance.loading_location.latitude)
                 }
-                drive_route_serializer = DriveRouteSerializer(data=drive_route)
+                drive_route_serializer = DriveRouteCreateSerializer(data=drive_route)
                 if drive_route_serializer.is_valid():
                     drive_route_serializer.save()
                     return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)
@@ -77,7 +78,7 @@ class DriveEndView(APIView):
         request.data['total_distance'] = \
             drive_record.driveroute_set.filter(is_active=True).aggregate(total_distance=Sum('distance'))[
                 'total_distance']
-        serializer = DriveEndSerializer(instance=drive_record, data=request.data)
+        serializer = DriveEndCreateSerializer(instance=drive_record, data=request.data)
         if serializer.is_valid():
             serializer.save()
             drive_route = {
@@ -85,7 +86,7 @@ class DriveEndView(APIView):
                 'longitude': float(serializer.instance.loading_location.longitude),
                 'latitude': float(serializer.instance.loading_location.latitude)
             }
-            drive_route_serializer = DriveRouteSerializer(data=drive_route)
+            drive_route_serializer = DriveRouteCreateSerializer(data=drive_route)
             if drive_route_serializer.is_valid():
                 drive_route_serializer.save()
                 return Response({'message': 'UPDATE_SUCCESS'}, status=status.HTTP_201_CREATED)

@@ -7,7 +7,7 @@ from rest_framework import serializers
 from projects.models.site import Site
 
 
-class ProgressSerializer(serializers.Serializer):
+class ProgressViewSerializer(serializers.Serializer):
     site_id = serializers.IntegerField(read_only=True)
     site_name = serializers.SerializerMethodField(method_name='get_site_name')
     progress = serializers.SerializerMethodField(method_name='get_progress')

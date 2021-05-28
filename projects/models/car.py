@@ -23,7 +23,7 @@ class Car(models.Model):
         db_table = 'cars'
 
 
-class CarSerializer(serializers.ModelSerializer):
+class CarCreateSerializer(serializers.ModelSerializer):
     site = serializers.PrimaryKeyRelatedField(queryset=Site.objects.filter(is_active=True))
     driver = serializers.PrimaryKeyRelatedField(many=True, queryset=Driver.objects.filter(is_active=True))
 

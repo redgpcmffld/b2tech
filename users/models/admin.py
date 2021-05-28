@@ -25,7 +25,7 @@ class Admin(models.Model):
         db_table = 'admins'
 
 
-class AdminSerializer(serializers.ModelSerializer):
+class AdminCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Admin
         fields = '__all__'

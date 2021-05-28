@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from ..models.drive_record import DriveRecord
-from ..models.drive_route import DriveRouteSerializer, DriveRouteViewSerializer
+from ..models.drive_route import DriveRouteCreateSerializer, DriveRouteViewSerializer
 
 from utils import login_required
 
@@ -13,7 +13,7 @@ from utils import login_required
 class DriveRouteView(APIView):
     @login_required
     def post(self, request):
-        serializer = DriveRouteSerializer(data=request.data)
+        serializer = DriveRouteCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)

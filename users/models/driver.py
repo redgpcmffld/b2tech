@@ -31,7 +31,7 @@ class DriverViewSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DriverSerializer(serializers.ModelSerializer):
+class DriverCreateSerializer(serializers.ModelSerializer):
     site = serializers.PrimaryKeyRelatedField(queryset=Site.objects.filter(is_active=True), required=True)
 
     class Meta:

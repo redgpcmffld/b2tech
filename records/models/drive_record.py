@@ -100,7 +100,7 @@ class DriveRecordViewSerializer(serializers.ModelSerializer):
         return f'{obj.total_distance}km'
 
 
-class DriveStartSerializer(serializers.ModelSerializer):
+class DriveStartCreateSerializer(serializers.ModelSerializer):
     car = serializers.PrimaryKeyRelatedField(required=True, queryset=Car.objects.filter(is_active=True))
     loading_location = serializers.PrimaryKeyRelatedField(
         queryset=Location.objects.filter(is_active=True, type=True), required=True)
@@ -150,7 +150,7 @@ class DriveStartSerializer(serializers.ModelSerializer):
         return data
 
 
-class DriveEndSerializer(serializers.ModelSerializer):
+class DriveEndCreateSerializer(serializers.ModelSerializer):
     unloading_time = serializers.DateTimeField(default=datetime.now())
     status = serializers.IntegerField(max_value=4, min_value=1)
 

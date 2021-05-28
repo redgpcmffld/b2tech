@@ -19,20 +19,20 @@ class Resource(models.Model):
         db_table = 'resources'
 
 
-class ResourceSerializer(serializers.ModelSerializer):
+class ResourceCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
         fields = '__all__'
 
 
-class LocationResourceSerializer(serializers.ModelSerializer):
+class ResourceLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
         fields = ['resource_id', 'name', 'type', 'block']
 
 
 class ResourceViewSerializer(serializers.ModelSerializer):
-    resource = LocationResourceSerializer(many=True, read_only=True)
+    resource = ResourceLocationSerializer(many=True, read_only=True)
 
     class Meta:
         from projects.models.location import Location

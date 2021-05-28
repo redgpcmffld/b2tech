@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from projects.models.resource import Resource, ResourceSerializer, ResourceViewSerializer
+from projects.models.resource import Resource, ResourceCreateSerializer, ResourceViewSerializer
 from projects.models.location import Location
 
 from utils import login_required
@@ -41,7 +41,7 @@ class ResourceView(APIView, MyPagination):
     @login_required
     def post(self, request):
         try:
-            serializer = ResourceSerializer(data=request.data)
+            serializer = ResourceCreateSerializer(data=request.data)
 
             if serializer.is_valid():
                 serializer.save()
@@ -58,7 +58,7 @@ class ResourceView(APIView, MyPagination):
                 return Response({'message': 'CHECK_RESOURCE_ID'}, status=status.HTTP_400_BAD_REQUEST)
 
             resource = Resource.objects.get(pk=request.data['resource_id'])
-            serializer = ResourceSerializer(resource, data=request.data)
+            serializer = ResourceCreateSerializer(resource, data=request.data)
 
             if serializer.is_valid():
                 serializer.save()

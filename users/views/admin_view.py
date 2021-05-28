@@ -7,14 +7,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from ..models.admin import Admin, AdminSerializer
+from ..models.admin import Admin, AdminCreateSerializer
 
 from my_settings import SECRET_KEY, algorithms
 
 
 class SignupView(APIView):
     def post(self, request):
-        serializer = AdminSerializer(data=request.data)
+        serializer = AdminCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({'message': 'SUCCESS'}, status=status.HTTP_201_CREATED)

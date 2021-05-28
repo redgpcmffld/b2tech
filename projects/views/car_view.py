@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from projects.models.car import Car, CarSerializer, CarViewSerializer
+from projects.models.car import Car, CarCreateSerializer, CarViewSerializer
 
 from utils import login_required
 from pagination import MyPagination
@@ -34,7 +34,7 @@ class CarView(APIView, MyPagination):
     @login_required
     def post(self, request):
         try:
-            serializer = CarSerializer(data=request.data)
+            serializer = CarCreateSerializer(data=request.data)
 
             if Car.objects.filter(number=request.data['number']):
                 return Response({'message': 'DUPLICATE_NUMBER'}, status=status.HTTP_409_CONFLICT)
@@ -55,7 +55,7 @@ class CarView(APIView, MyPagination):
 
             car = Car.objects.get(pk=request.data['car_id'])
 
-            serializer = CarSerializer(car, data=request.data)
+            serializer = CarCreateSerializer(car, data=request.data)
 
             if serializer.is_valid():
                 serializer.save()
