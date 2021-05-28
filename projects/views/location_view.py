@@ -1,5 +1,5 @@
 import math
-from django.db.models import Case, When, Value
+from django.db.models import Case, When, Value, Q
 from django.http import HttpResponse
 
 from rest_framework.views import APIView
@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from openpyxl import Workbook
 
-from projects.models.location import Location, LocationSerializer, LocationViewSerializer
+from projects.models.location import Location, LocationCreateSerializer, LocationViewSerializer
 
 from utils import login_required
 from pagination import MyPagination
@@ -34,7 +34,7 @@ class LocationView(APIView, MyPagination):
                     name=request.data['name'],
                     type=request.data['type']).exists():
                 return Response({'message': 'DUPLICATE_LOCATION'}, status=status.HTTP_409_CONFLICT)
-            serializer = LocationSerializer(data=request.data)
+            serializer = LocationCreateSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)
@@ -49,7 +49,7 @@ class LocationView(APIView, MyPagination):
                 return Response({'message': 'CHECK_LOCATION_ID'}, status=status.HTTP_400_BAD_REQUEST)
 
             location = Location.objects.get(pk=request.data['location_id'])
-            serializer = LocationSerializer(location, data=request.data)
+            serializer = LocationCreateSerializer(location, data=request.data)
 
             if serializer.is_valid():
                 serializer.save()
@@ -61,7 +61,13 @@ class LocationView(APIView, MyPagination):
     @login_required
     def delete(self, request, location_id):
         try:
-            location = Location.objects.get(pk=location_id, is_active=True)
+            q = Q(is_active=True)
+            q.add(Q(pk=location_id), q.AND)
+            if request.user.type == 'ProjectTotalAdmin':
+                q.add(Q(site__project__project_admin__pk=request.user.pk), q.AND)
+            else:
+                q.add(Q(site__site_admin__pk=request.user.pk), q.AND)
+            location = Location.objects.get(q)
             location.is_active = False
             location.save()
             return Response({'message': 'DELETE_SUCCESS'}, status=status.HTTP_204_NO_CONTENT)
@@ -69,15 +75,17 @@ class LocationView(APIView, MyPagination):
             return Response({'message': 'LOCATION_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class LocationExportView(APIView):
+class LocationListExportView(APIView):
     @login_required
     def get(self, request):
         admin = request.user
+        q = Q(is_active=True)
         if admin.type == 'ProjectTotalAdmin':
-            queryset = Location.objects.filter(is_active=True, site__project__project_admin__pk=admin.pk)
+            q.add(Q(site__project__project_admin__pk=admin.pk), q.AND)
         else:
-            queryset = Location.objects.filter(is_active=True, site__site_admin__pk=admin.pk)
+            q.add(Q(site__site_admin__pk=admin.pk), q.AND)
 
+        queryset = Location.objects.filter(q)
         excel_data = []
         excel_data.append(('id', '현장명', '타입', '이름', '주소', '위도', '경도', '영역'))
         locations = queryset.annotate(
