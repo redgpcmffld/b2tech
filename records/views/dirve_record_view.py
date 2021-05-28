@@ -7,7 +7,6 @@ from rest_framework import status
 from ..models.drive_record import DriveRecord, DriveRecordViewSerializer, DriveEndSerializer, DriveStartSerializer
 from ..models.drive_route import DriveRouteSerializer
 from projects.models.location import Location
-from projects.models.site import Site
 
 from utils import login_required
 from pagination import MyPagination
@@ -17,36 +16,15 @@ class DriveStartView(APIView):
     @login_required
     def post(self, request):
         try:
-            loading_location = Location.objects.get(pk=request.data['loading_location'])
-            unloading_location = Location.objects.get(pk=request.data['unloading_location'])
-            loading_location_resource_pk = loading_location.resource.filter(is_active=True).get().pk
-            unloading_location_resource_pk = unloading_location.resource.filter(is_active=True).get().pk
             admin = request.user
-            if admin.type == 'ProjectTotalAdmin':
-                loading_location_site_check = Site.objects.filter(is_active=True, project__project_admin__pk=admin.pk,
-                                                                  location__pk=loading_location.pk).exists()
-                unloading_location_site_check = Site.objects.filter(is_active=True, project__project_admin__pk=admin.pk,
-                                                                    location__pk=unloading_location.pk).exists()
-                if (loading_location_resource_pk != unloading_location_resource_pk) or not (
-                        loading_location_site_check and unloading_location_site_check):
-                    return Response({'message': 'INVALID_LOCATION'}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                loading_location_site_check = Site.objects.filter(is_active=True, site_admin__pk=admin.pk,
-                                                                  location__pk=loading_location.pk).exists()
-                unloading_location_site_check = Site.objects.filter(is_active=True, site_admin__pk=admin.pk,
-                                                                    location__pk=unloading_location.pk).exists()
-                if (loading_location_resource_pk != unloading_location_resource_pk) or not (
-                        loading_location_site_check and unloading_location_site_check):
-                    return Response({'message': 'INVALID_LOCATION'}, status=status.HTTP_400_BAD_REQUEST)
-
-            serializer = DriveStartSerializer(data=request.data)
+            car_pk = request.data['car']
+            serializer = DriveStartSerializer(data=request.data, context={'admin': admin, 'car_pk': car_pk})
             if serializer.is_valid():
                 serializer.save()
                 drive_route = {
                     'drive_record': serializer.instance.pk,
                     'longitude': float(serializer.instance.loading_location.longitude),
-                    'latitude': float(serializer.instance.loading_location.latitude),
-                    'distance': 0
+                    'latitude': float(serializer.instance.loading_location.latitude)
                 }
                 drive_route_serializer = DriveRouteSerializer(data=drive_route)
                 if drive_route_serializer.is_valid():
@@ -96,5 +74,14 @@ class DriveEndView(APIView):
         serializer = DriveEndSerializer(instance=drive_record, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'UPDATE_SUCCESS'}, status=status.HTTP_201_CREATED)
+            drive_route = {
+                'drive_record': serializer.instance.pk,
+                'longitude': float(serializer.instance.loading_location.longitude),
+                'latitude': float(serializer.instance.loading_location.latitude)
+            }
+            drive_route_serializer = DriveRouteSerializer(data=drive_route)
+            if drive_route_serializer.is_valid():
+                drive_route_serializer.save()
+                return Response({'message': 'UPDATE_SUCCESS'}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
