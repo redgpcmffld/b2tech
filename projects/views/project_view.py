@@ -19,7 +19,7 @@ class ProjectSiteView(View):
                 'site': [{
                     'site_id': site.pk,
                     'name': site.name
-                } for site in project.site_set.all()]
+                } for site in project.site_set.filter(is_active=True)]
             } for project in Project.objects.filter(is_active=True, project_admin__pk=admin.pk)]
 
             return JsonResponse({'result': data}, status=200)

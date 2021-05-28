@@ -37,8 +37,8 @@ class CarCreateSerializer(serializers.ModelSerializer):
 
 
 class CarViewSerializer(serializers.ModelSerializer):
-    site = serializers.SerializerMethodField()
-    driver = serializers.SerializerMethodField()
+    site = serializers.SerializerMethodField(method_name='get_site')
+    driver = serializers.SerializerMethodField(method_name='get_driver')
 
     class Meta:
         model = Car
@@ -52,5 +52,5 @@ class CarViewSerializer(serializers.ModelSerializer):
             'driver_id': driver.pk,
             'name': driver.name,
             'phone_number': driver.phone_number
-        } for driver in Driver.objects.filter(is_active=True)]
+        } for driver in obj.driver.filter(is_active=True)]
         return result
