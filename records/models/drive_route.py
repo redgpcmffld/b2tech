@@ -55,14 +55,14 @@ class DriveRouteViewSerializer(serializers.Serializer):
     class Meta:
         model = DriveRecord
         fields = [
-            'pk',
+            'drive_record_id',
             'drive_route'
         ]
 
     def get_loading_location(self, drive_record):
         loading_location = drive_record.loading_location
         result = {
-            'pk': loading_location.pk,
+            'loading_location_id': loading_location.pk,
             'type': loading_location.type,
             'name': loading_location.name,
             'longitude': loading_location.longitude,
@@ -73,7 +73,7 @@ class DriveRouteViewSerializer(serializers.Serializer):
     def get_unloading_location(self, drive_record):
         unloading_location = drive_record.unloading_location
         result = {
-            'pk': unloading_location.pk,
+            'unloading_location_id': unloading_location.pk,
             'type': unloading_location.type,
             'name': unloading_location.name,
             'longitude': unloading_location.longitude,
@@ -85,7 +85,7 @@ class DriveRouteViewSerializer(serializers.Serializer):
         if str(type(self.instance)) == "<class 'records.models.drive_record.DriveRecord'>":
             result = [
                 {
-                    'pk': drive_route['pk'],
+                    'drive_route_id': drive_route['pk'],
                     'longitude': drive_route['longitude'],
                     'latitude': drive_route['latitude']
                 }
@@ -95,7 +95,7 @@ class DriveRouteViewSerializer(serializers.Serializer):
             return None
         drive_route = drive_record.driveroute_set.values('pk', 'longitude', 'latitude').last()
         result = {
-            'pk': drive_route['pk'],
+            'drive_route_id': drive_route['pk'],
             'longitude': drive_route['longitude'],
             'latitude': drive_route['latitude']
         }

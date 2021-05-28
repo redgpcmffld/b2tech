@@ -62,7 +62,7 @@ class DriveRecordViewSerializer(serializers.ModelSerializer):
 
     def get_resource_name(self, obj):
         result = {
-            'pk': obj.loading_location.resource.get().pk,
+            'resource_id': obj.loading_location.resource.get().pk,
             'name': obj.loading_location.resource.get().name
         }
         return result
@@ -114,6 +114,7 @@ class DriveStartSerializer(serializers.ModelSerializer):
     class Meta:
         model = DriveRecord
         fields = [
+            'drive_record_id',
             'car',
             'loading_location',
             'unloading_location',
@@ -156,6 +157,7 @@ class DriveEndSerializer(serializers.ModelSerializer):
     class Meta:
         model = DriveRecord
         fields = [
+            'drive_record_id',
             'unloading_time',
             'status',
             'total_distance'
