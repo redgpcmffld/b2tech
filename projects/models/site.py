@@ -44,7 +44,7 @@ class SiteViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Site
-        fields = ['name', 'start_date', 'end_date', 'project']
+        fields = ['site_id', 'name', 'start_date', 'end_date', 'project']
 
     def get_project(self, obj):
         return {'project_id': obj.project.pk, 'name': obj.project.name}

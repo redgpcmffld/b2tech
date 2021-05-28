@@ -28,7 +28,7 @@ class ResourceSerializer(serializers.ModelSerializer):
 class LocationResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
-        fields = ['pk', 'name', 'type', 'block']
+        fields = ['resource_id', 'name', 'type', 'block']
 
 
 class ResourceViewSerializer(serializers.ModelSerializer):
