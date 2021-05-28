@@ -26,10 +26,13 @@ class Location(models.Model):
         db_table = 'locations'
 
 
-class LocationSerializer(serializers.ModelSerializer):
+class LocationCreateSerializer(serializers.ModelSerializer):
     from projects.models.resource import Resource
-    resource = serializers.PrimaryKeyRelatedField(many=True, queryset=Resource.objects.filter(is_active=True),
-                                                  required=True)
+    resource = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Resource.objects.filter(is_active=True),
+        required=True
+    )
 
     class Meta:
         model = Location
@@ -54,4 +57,9 @@ class LocationViewSerializer(serializers.ModelSerializer):
         ]
 
     def get_site(self, obj):
-        return {'site_id': obj.site.get().pk, 'name': obj.site.get().name}
+        return [
+            {
+                'site_id': site.pk,
+                'name': site.name
+            }
+            for site in obj.site.filter(is_active=True)]
