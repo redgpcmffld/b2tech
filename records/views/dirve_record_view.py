@@ -1,4 +1,6 @@
-from django.db.models import Sum
+from datetime import date
+
+from django.db.models import Sum, Q
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -46,14 +48,18 @@ class DriveRecordView(APIView, MyPagination):
                 drive_record = DriveRecord.objects.get(is_active=True, pk=drive_record_id)
                 serializer = DriveRecordViewSerializer(drive_record)
                 return Response(serializer.data, status=status.HTTP_200_OK)
-
             admin = request.user
             serializer_class = DriveRecordViewSerializer
             self.pagination_class.page_size = request.GET.get('limit', 10)
+            q = Q(is_active=True)
+            if request.GET.get('today'):
+                q.add(Q(driving_date=date.today()), q.AND)
             if admin.type == 'ProjectTotalAdmin':
-                queryset = DriveRecord.objects.filter(is_active=True, car__site__project__project_admin__pk=admin.pk)
+                q.add(Q(car__site__project__project_admin__pk=admin.pk), q.AND)
+                queryset = DriveRecord.objects.filter(q)
             else:
-                queryset = DriveRecord.objects.filter(is_active=True, car__site__site_admin__pk=admin.pk)
+                q.add(Q(car__site__site_admin__pk=admin.pk), q.AND)
+                queryset = DriveRecord.objects.filter(q)
             page = self.paginate_queryset(queryset)
             serializer = serializer_class(page, many=True)
             return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),

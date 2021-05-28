@@ -39,8 +39,12 @@ class ProgressSerializer(serializers.Serializer):
         progress = int(today_workloads / today_plan * 5)
         if progress == 0:
             progress = 1
+        elif progress >= 5:
+            progress = 5
         if site_plan == 0:
             site_plan = 1
+        elif site_plan >= 5:
+            site_plan = 5
         result = {
             'weight': site_plan,
             'percent': progress
