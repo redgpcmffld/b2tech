@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from projects.models.resource import Resource, ResourceSerializer, ResourceViewSerializer
+from projects.models.location import Location
 
 from utils import login_required
 from pagination import MyPagination
@@ -20,9 +21,9 @@ class ResourceView(APIView, MyPagination):
         admin = request.user
 
         if admin.type == 'ProjectTotalAdmin':
-            queryset = Resource.objects.filter(is_active=True, location__site__project__project_admin__pk=admin.pk)
+            queryset = Location.objects.filter(is_active=True, site__project__project_admin__pk=admin.pk)
         else:
-            queryset = Resource.objects.filter(is_active=True, location__site__site_admin__pk=admin.pk)
+            queryset = Location.objects.filter(is_active=True, site__site_admin__pk=admin.pk)
 
         self.pagination_class.page_size = request.GET.get('limit', 10)
         page = self.paginate_queryset(queryset)
