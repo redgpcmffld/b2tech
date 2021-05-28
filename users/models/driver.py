@@ -41,4 +41,10 @@ class DriverSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         validators.RegexValidator(r'^\d{11}$', '잘못된 전화번호 형식입니다.')(attrs.get('phone_number'))
         validators.RegexValidator(r'^[가-힣]{2,}$|^[a-z]{2,20}$', '이름은 2글자 이상 한글이거나 영어이어야 합니다.')(attrs.get('name'))
+        admin = self.context['admin']
+        if admin.type == 'ProjectTotalAdmin':
+            if Site.objects.filter(project__project_admin__pk=admin.pk).exists():
+                raise serializers.ValidationError('INVALID_SITE')
+        if Site.objects.filter(site_admin__pk=admin.pk).exists():
+            raise serializers.ValidationError('INVALID_SITE')
         return attrs
