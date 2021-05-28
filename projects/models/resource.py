@@ -1,5 +1,4 @@
 from django.db import models
-from django.core import validators
 
 from rest_framework import serializers
 
@@ -28,14 +27,14 @@ class ResourceSerializer(serializers.ModelSerializer):
 
 class LocationResourceSerializer(serializers.ModelSerializer):
     class Meta:
-        from projects.models.location import Location
-        model = Location
-        fields = ['location_id', 'name']
+        model = Resource
+        fields = ['pk', 'name', 'type', 'block']
 
 
 class ResourceViewSerializer(serializers.ModelSerializer):
-    location_set = LocationResourceSerializer(many=True, read_only=True)
+    resource = LocationResourceSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Resource
-        fields = ['pk', 'name', 'type', 'block', 'location_set']
+        from projects.models.location import Location
+        model = Location
+        fields = ['location_id', 'name', 'resource']
