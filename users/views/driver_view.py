@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
+from projects.models.site import Site
 from ..models.driver import Driver, DriverSerializer, DriverViewSerializer
 
 from utils import login_required
@@ -27,10 +28,8 @@ class DriverView(APIView, MyPagination):
         try:
             if Driver.objects.filter(phone_number=request.data['phone_number']).exists():
                 return Response({'message': 'DUPLICATE_PHONE_NUMBER'}, status=status.HTTP_409_CONFLICT)
-            if not request.user.site.filter(pk=request.data['site']).exists():
-                return Response({'message': 'INVALID_SITE'}, status=status.HTTP_400_BAD_REQUEST)
 
-            serializer = DriverSerializer(data=request.data)
+            serializer = DriverSerializer(data=request.data, context={'admin': request.user})
 
             if serializer.is_valid():
                 serializer.save()
@@ -47,7 +46,7 @@ class DriverView(APIView, MyPagination):
                 return Response({'message': 'CHECK_DRIVER_ID'}, status=status.HTTP_400_BAD_REQUEST)
 
             driver = Driver.objects.get(pk=request.data['driver_id'])
-            serializer = DriverSerializer(driver, data=request.data)
+            serializer = DriverSerializer(driver, data=request.data, context={'admin': request.user})
 
             if serializer.is_valid():
                 serializer.save()

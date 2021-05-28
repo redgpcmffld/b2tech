@@ -1,4 +1,4 @@
-from django.db.models import F
+from django.db.models import Case, When, Value
 from django.http import HttpResponse
 
 from rest_framework.views import APIView
@@ -78,11 +78,21 @@ class LocationExportView(APIView):
         else:
             queryset = Location.objects.filter(is_active=True, site__site_admin__pk=admin.pk)
 
-        # Location.objects.filter(site__site_admin__pk=4).values('pk', 'name', 'longitude', 'latitude',
-        #                                                        location_type=Case(When(type=1, then=Value('상차지')), When(type=0, then=Value('하차지'))))
         excel_data = []
-        excel_data.append(list(queryset.values(site_name=F('site__name'), pk='pk', longitude='longitude', latitude='latitude')))
-        for location in Location.objects.values_list():
+        excel_data.append(('id', '현장명', '타입', '이름', '주소', '위도', '경도', '영역'))
+        locations = queryset.annotate(
+            location_type=Case(
+                When(type=1, then=Value('상차지')),
+                When(type=0, then=Value('하차지')))).values_list(
+            'pk',
+            'site__name',
+            'location_type',
+            'name',
+            'address',
+            'latitude',
+            'longitude',
+            'range')
+        for location in locations:
             excel_data.append(
                 list(location)
             )
