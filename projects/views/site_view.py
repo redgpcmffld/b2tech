@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from projects.models.site import Site, SiteSerializer, SiteViewSerializer
+from projects.models.site import Site, SiteCreateSerializer, SiteViewSerializer
 
 from utils import login_required
 from pagination import MyPagination
@@ -33,7 +33,7 @@ class SiteView(APIView, MyPagination):
             if Site.objects.filter(name=request.data['name']).exists():
                 return Response({'message': 'DUPLICATE_NAME'}, status=status.HTTP_409_CONFLICT)
 
-            serializer = SiteSerializer(data=request.data)
+            serializer = SiteCreateSerializer(data=request.data)
 
             if serializer.is_valid():
                 serializer.save()
@@ -50,7 +50,7 @@ class SiteView(APIView, MyPagination):
                 return Response({'message': 'CHECK_SITE_ID'}, status=status.HTTP_400_BAD_REQUEST)
 
             site = Site.objects.get(pk=request.data['site_id'])
-            serializer = SiteSerializer(site, data=request.data)
+            serializer = SiteCreateSerializer(site, data=request.data)
 
             if serializer.is_valid():
                 serializer.save()

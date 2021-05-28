@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from projects.models.site import Site
-from ..models.progress import ProgressSerializer
+from ..models.progress import ProgressViewSerializer
 
 from utils import login_required
 
@@ -17,6 +17,6 @@ class ProgressView(APIView):
         else:
             sites = Site.objects.filter(is_active=True, site_admin__pk=admin.pk)
 
-        serializer = ProgressSerializer(sites, many=True)
+        serializer = ProgressViewSerializer(sites, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)

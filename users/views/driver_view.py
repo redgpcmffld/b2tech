@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from projects.models.site import Site
-from ..models.driver import Driver, DriverSerializer, DriverViewSerializer
+from ..models.driver import Driver, DriverCreateSerializer, DriverViewSerializer
 
 from utils import login_required
 from pagination import MyPagination
@@ -29,7 +29,7 @@ class DriverView(APIView, MyPagination):
             if Driver.objects.filter(phone_number=request.data['phone_number']).exists():
                 return Response({'message': 'DUPLICATE_PHONE_NUMBER'}, status=status.HTTP_409_CONFLICT)
 
-            serializer = DriverSerializer(data=request.data, context={'admin': request.user})
+            serializer = DriverCreateSerializer(data=request.data, context={'admin': request.user})
 
             if serializer.is_valid():
                 serializer.save()
@@ -46,7 +46,7 @@ class DriverView(APIView, MyPagination):
                 return Response({'message': 'CHECK_DRIVER_ID'}, status=status.HTTP_400_BAD_REQUEST)
 
             driver = Driver.objects.get(pk=request.data['driver_id'])
-            serializer = DriverSerializer(driver, data=request.data, context={'admin': request.user})
+            serializer = DriverCreateSerializer(driver, data=request.data, context={'admin': request.user})
 
             if serializer.is_valid():
                 serializer.save()

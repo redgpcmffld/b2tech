@@ -20,7 +20,7 @@ class DriveRoute(models.Model):
         db_table = 'drive_routes'
 
 
-class DriveRouteSerializer(serializers.ModelSerializer):
+class DriveRouteCreateSerializer(serializers.ModelSerializer):
     latitude = serializers.DecimalField(max_digits=15, decimal_places=12)
     longitude = serializers.DecimalField(max_digits=15, decimal_places=12)
 
