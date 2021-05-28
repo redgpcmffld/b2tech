@@ -1,3 +1,4 @@
+import math
 from django.db.models import Case, When, Value
 from django.http import HttpResponse
 
@@ -23,8 +24,7 @@ class LocationView(APIView, MyPagination):
         self.pagination_class.page_size = request.GET.get('limit', 10)
         page = self.paginate_queryset(queryset)
         serializer = LocationViewSerializer(page, many=True)
-
-        return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
+        return Response({'last_page': math.ceil(queryset.count() / int(self.pagination_class.page_size)),
                          'result': serializer.data}, status=status.HTTP_200_OK)
 
     @login_required
