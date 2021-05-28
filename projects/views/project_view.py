@@ -26,12 +26,12 @@ class ProjectSiteView(View):
 
         if admin.type == 'SiteAdmin':
             data = [{
-                'project': {
-                    'project_id': site.project.pk,
-                    'name': site.project.name
+                'project_id': site.project.pk,
+                'name': site.project.name,
+                'site': {
+                    'site_id': site.pk,
+                    'name': site.name
                 },
-                'site_id': site.pk,
-                'name': site.name,
             } for site in Site.objects.filter(is_active=True, site_admin__pk=admin.pk)]
 
             return JsonResponse({'result': data}, status=200)
