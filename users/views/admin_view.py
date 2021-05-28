@@ -37,7 +37,7 @@ class SigninView(APIView):
 
         access_token = jwt.encode(
             {'admin_id': admin.pk,
-             'exp': datetime.utcnow() + timedelta(seconds=30000000)}, SECRET_KEY,
+             'exp': datetime.utcnow() + timedelta(days=3)}, SECRET_KEY,
             algorithm=algorithms)
 
         return Response({'message': 'SUCCESS'}, status=status.HTTP_200_OK,
