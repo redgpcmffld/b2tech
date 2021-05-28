@@ -1,6 +1,10 @@
+from django.db.models import F
+from django.http import HttpResponse
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from openpyxl import Workbook
 
 from projects.models.location import Location, LocationSerializer, LocationViewSerializer
 
@@ -19,6 +23,7 @@ class LocationView(APIView, MyPagination):
         self.pagination_class.page_size = request.GET.get('limit', 10)
         page = self.paginate_queryset(queryset)
         serializer = LocationViewSerializer(page, many=True)
+
         return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
                          'result': serializer.data}, status=status.HTTP_200_OK)
 
@@ -62,3 +67,32 @@ class LocationView(APIView, MyPagination):
             return Response({'message': 'DELETE_SUCCESS'}, status=status.HTTP_204_NO_CONTENT)
         except Location.DoesNotExist:
             return Response({'message': 'LOCATION_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class LocationExportView(APIView):
+    @login_required
+    def get(self, request):
+        admin = request.user
+        if admin.type == 'ProjectTotalAdmin':
+            queryset = Location.objects.filter(is_active=True, site__project__project_admin__pk=admin.pk)
+        else:
+            queryset = Location.objects.filter(is_active=True, site__site_admin__pk=admin.pk)
+
+        # Location.objects.filter(site__site_admin__pk=4).values('pk', 'name', 'longitude', 'latitude',
+        #                                                        location_type=Case(When(type=1, then=Value('상차지')), When(type=0, then=Value('하차지'))))
+        excel_data = []
+        excel_data.append(list(queryset.values(site_name=F('site__name'), pk='pk', longitude='longitude', latitude='latitude')))
+        for location in Location.objects.values_list():
+            excel_data.append(
+                list(location)
+            )
+        if excel_data:
+            wb = Workbook(write_only=True)
+            ws = wb.create_sheet()
+            for line in excel_data:
+                ws.append(line)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+
+        wb.save(response)
+        return response
