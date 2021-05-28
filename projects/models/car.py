@@ -42,7 +42,7 @@ class CarViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Car
-        fields = ['type', 'number', 'driver', 'site']
+        fields = ['pk', 'type', 'number', 'driver', 'site']
 
     def get_site(self, obj):
         return {'site_id': obj.site.pk, 'name': obj.site.name}
