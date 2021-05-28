@@ -1,9 +1,11 @@
+from django.db.models import Q
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from projects.models.resource import Resource, ResourceCreateSerializer, ResourceViewSerializer
-from projects.models.location import Location
+from projects.models.site import Site
 
 from utils import login_required
 from pagination import MyPagination
@@ -26,10 +28,14 @@ class ResourceView(APIView, MyPagination):
     def get(self, request):
         admin = request.user
 
+        q = Q(is_active=True)
+
         if admin.type == 'ProjectTotalAdmin':
-            queryset = Location.objects.filter(is_active=True, site__project__project_admin__pk=admin.pk)
+            q.add(Q(project__project_admin__pk=admin.pk), q.AND)
         else:
-            queryset = Location.objects.filter(is_active=True, site__site_admin__pk=admin.pk)
+            q.add(Q(site_admin__pk=admin.pk), q.AND)
+
+        queryset = Site.objects.filter(q)
 
         self.pagination_class.page_size = request.GET.get('limit', 10)
         page = self.paginate_queryset(queryset)
