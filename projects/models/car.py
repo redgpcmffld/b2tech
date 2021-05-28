@@ -42,11 +42,15 @@ class CarViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Car
-        fields = ['type', 'number', 'driver', 'site']
+        fields = ['pk', 'type', 'number', 'driver', 'site']
 
     def get_site(self, obj):
         return {'site_id': obj.site.pk, 'name': obj.site.name}
 
     def get_driver(self, obj):
-        return {'driver_id': obj.driver.get().pk, 'phone_number': obj.driver.get().phone_number,
-                'name': obj.driver.get().name}
+        result = [{
+            'driver_id': driver.pk,
+            'name': driver.name,
+            'phone_number': driver.phone_number
+        } for driver in Driver.objects.filter(is_active=True)]
+        return result
