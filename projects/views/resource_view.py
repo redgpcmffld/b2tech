@@ -1,5 +1,7 @@
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value
+from django.http import HttpResponse
 
+from openpyxl import Workbook
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -84,3 +86,49 @@ class ResourceView(APIView, MyPagination):
 
         except Resource.DoesNotExist:
             return Response({'message': 'RESOURCE_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ResourceListExportView(APIView):
+    @login_required
+    def get(self, request):
+        admin = request.user
+        q = Q(is_active=True)
+        if admin.type == 'ProjectTotalAdmin':
+            q.add(Q(project__project_admin__pk=admin.pk), q.AND)
+        else:
+            q.add(Q(site_admin__pk=admin.pk), q.AND)
+
+        queryset = Site.objects.filter(q)
+        excel_data = []
+        excel_data.append(('현장명', '이름', '타입', '단위'))
+        resources = queryset.annotate(
+            resource_type=Case(
+                When(location__resource__type='Iron', then=Value('철')),
+                When(location__resource__type='Dirt', then=Value('사토')),
+                When(location__resource__type='Stone', then=Value('바위')),
+                When(location__resource__type='Waste', then=Value('폐기물'))
+                ),
+            resource_block=Case(
+                When(location__resource__block='m**3', then=Value(u'm\u00B3')),
+                When(~Q(location__resource__block='m**3'), then='location__resource__block'),
+            )).values_list(
+            'name',
+            'location__resource__name',
+            'resource_type',
+            'resource_block'
+            ).distinct()
+
+        for resource in resources:
+            excel_data.append(
+                list(resource)
+            )
+        if excel_data:
+            wb = Workbook(write_only=True)
+            ws = wb.create_sheet()
+            for line in excel_data:
+                ws.append(line)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=resource_list.xlsx'
+
+        wb.save(response)
+        return response

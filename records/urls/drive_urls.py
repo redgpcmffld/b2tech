@@ -1,5 +1,5 @@
 from django.urls import path
-from ..views.dirve_record_view import DriveRecordView, DriveRecordDetailView
+from ..views.dirve_record_view import DriveRecordView, DriveRecordDetailView, DriveRecordListExportView
 from ..views.progress_view import ProgressView, WorkLoadsView
 
 urlpatterns = [
@@ -8,5 +8,6 @@ urlpatterns = [
     path('/<int:drive_record_id>', DriveRecordView.as_view(), name='read_drive_record_detail|update_drive_record'),
     path('', DriveRecordView.as_view(), name='read_drive_record_list|create_drive_record'),
     path('/progress', ProgressView.as_view(), name='read_progress'),
-    path('/workloads', WorkLoadsView.as_view(), name='read_workloads')
+    path('/workloads', WorkLoadsView.as_view(), name='read_workloads'),
+    path('/export', DriveRecordListExportView.as_view())
 ]

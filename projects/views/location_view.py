@@ -110,7 +110,7 @@ class LocationListExportView(APIView):
             for line in excel_data:
                 ws.append(line)
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+        response['Content-Disposition'] = 'attachment; filename=location_list.xlsx'
 
         wb.save(response)
         return response

@@ -1,3 +1,7 @@
+from django.db.models import Q
+from django.http import HttpResponse
+
+from openpyxl import Workbook
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -70,3 +74,41 @@ class SiteView(APIView, MyPagination):
 
         except Site.DoesNotExist:
             return Response({'message': 'SITE_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class SiteListExportView(APIView):
+    @login_required
+    def get(self, request):
+        admin = request.user
+        q = Q(is_active=True)
+        if admin.type == 'ProjectTotalAdmin':
+            q.add(Q(project__project_admin__pk=admin.pk), q.AND)
+        else:
+            q.add(Q(site_admin__pk=admin.pk), q.AND)
+
+        queryset = Site.objects.filter(q)
+        excel_data = []
+        excel_data.append(('id', '프로젝트명', '현장명', '시작연도', '시작월', '종료연도', '종료월'))
+        sites = queryset.values_list(
+            'pk',
+            'project__name',
+            'name',
+            'start_date__year',
+            'start_date__month',
+            'end_date__year',
+            'end_date__month'
+        )
+        for site in sites:
+            excel_data.append(
+                list(site)
+            )
+        if excel_data:
+            wb = Workbook(write_only=True)
+            ws = wb.create_sheet()
+            for line in excel_data:
+                ws.append(line)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=site_list.xlsx'
+
+        wb.save(response)
+        return response
