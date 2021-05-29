@@ -1,7 +1,9 @@
 from datetime import date
 
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value
+from django.http import HttpResponse
 
+from openpyxl import Workbook
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -119,3 +121,50 @@ class DriveRecordDetailView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except DriveRecord.DoesNotExist:
             return Response({'message': 'DRIVE_RECORD_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class DriveRecordListExportView(APIView):
+    @login_required
+    def get(self, request):
+        admin = request.user
+        q = Q(is_active=True)
+        if admin.type == 'ProjectTotalAdmin':
+            q.add(Q(loading_location__site__project__project_admin__pk=admin.pk), q.AND)
+        else:
+            q.add(Q(loading_location__site__site_admin__pk=admin.pk), q.AND)
+
+        queryset = DriveRecord.objects.filter(q)
+        excel_data = []
+        excel_data.append(('id', '차량번호', '상차지', '하차지', '출발시간', '도착시간', '총거리', '상태', '성상 이름', '성상 무게', '성상 단위'))
+        drive_records = queryset.annotate(
+            resource_block=Case(
+                When(loading_location__resource__block='m**3', then=Value(u'm\u00B3')),
+                When(~Q(loading_location__resource__block='m**3'), then='loading_location__resource__block'),
+            )
+        ).values_list(
+            'pk',
+            'car__number',
+            'loading_location__name',
+            'unloading_location__name',
+            'loading_time',
+            'unloading_time',
+            'total_distance',
+            'status',
+            'loading_location__resource__name',
+            'transport_weight',
+            'resource_block'
+        ).distinct()
+        for drive_record in drive_records:
+            excel_data.append(
+                list(drive_record)
+            )
+        if excel_data:
+            wb = Workbook(write_only=True)
+            ws = wb.create_sheet()
+            for line in excel_data:
+                ws.append(line)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=drive_record_list.xlsx'
+
+        wb.save(response)
+        return response

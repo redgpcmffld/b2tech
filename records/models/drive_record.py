@@ -62,8 +62,8 @@ class DriveRecordViewSerializer(serializers.ModelSerializer):
 
     def get_resource_name(self, obj):
         result = {
-            'resource_id': obj.loading_location.resource.get().pk,
-            'name': obj.loading_location.resource.get().name
+            'resource_id': obj.loading_location.resource.get(is_active=True).pk,
+            'name': obj.loading_location.resource.get(is_active=True).name
         }
         return result
 
@@ -80,13 +80,13 @@ class DriveRecordViewSerializer(serializers.ModelSerializer):
         return result
 
     def get_transport_weight(self, obj):
-        result = f'{obj.transport_weight}{obj.loading_location.resource.get().block}'
+        result = f'{obj.transport_weight}{obj.loading_location.resource.get(is_active=True).block}'
         return result
 
     def get_car_driver_name(self, obj):
         result = {
             'number': obj.car.number,
-            'driver_name': obj.car.driver.name
+            'driver_name': obj.car.driver.filter(is_active=True).first().name
         }
         return result
 

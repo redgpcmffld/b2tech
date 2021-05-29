@@ -1,3 +1,7 @@
+from django.db.models import Q, Case, When, Value
+from django.http import HttpResponse
+
+from openpyxl import Workbook
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -75,3 +79,46 @@ class CarView(APIView, MyPagination):
 
         except Car.DoesNotExist:
             return Response({'message': 'CAR_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CarListExportView(APIView):
+    @login_required
+    def get(self, request):
+        admin = request.user
+        q = Q(is_active=True)
+        if admin.type == 'ProjectTotalAdmin':
+            q.add(Q(site__project__project_admin__pk=admin.pk), q.AND)
+        else:
+            q.add(Q(site__site_admin__pk=admin.pk), q.AND)
+        queryset = Car.objects.filter(q)
+        excel_data = []
+        excel_data.append(('id', '현장명', '타입', '번호', '기사 이름', '기사 번호'))
+        cars = queryset.annotate(
+            car_type=Case(
+                When(type='DumpTruck', then=Value('덤프 트럭')),
+                When(type='WasteTruck', then=Value('폐기물 트럭')),
+                When(type='RecyclingTruck', then=Value('재활용 트럭')),
+                When(type='Tank', then=Value('탱크'))
+            )
+        ).values_list(
+            'pk',
+            'site__name',
+            'car_type',
+            'number',
+            'driver__name',
+            'driver__phone_number',
+        )
+        for car in cars:
+            excel_data.append(
+                list(car)
+            )
+        if excel_data:
+            wb = Workbook(write_only=True)
+            ws = wb.create_sheet()
+            for line in excel_data:
+                ws.append(line)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=car_list.xlsx'
+
+        wb.save(response)
+        return response
