@@ -1,7 +1,7 @@
 from datetime import date, datetime
 
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 from rest_framework import serializers
 
@@ -100,7 +100,7 @@ class DriveRecordViewSerializer(serializers.ModelSerializer):
         return f'{obj.total_distance}km'
 
 
-class DriveStartCreateSerializer(serializers.ModelSerializer):
+class DriveRecordCreateSerializer(serializers.ModelSerializer):
     car = serializers.PrimaryKeyRelatedField(required=True, queryset=Car.objects.filter(is_active=True))
     loading_location = serializers.PrimaryKeyRelatedField(
         queryset=Location.objects.filter(is_active=True, type=True), required=True)
@@ -150,7 +150,7 @@ class DriveStartCreateSerializer(serializers.ModelSerializer):
         return data
 
 
-class DriveEndCreateSerializer(serializers.ModelSerializer):
+class DriveRecordUpdateSerializer(serializers.ModelSerializer):
     unloading_time = serializers.DateTimeField(default=datetime.now())
     status = serializers.IntegerField(max_value=4, min_value=1)
 
@@ -162,3 +162,14 @@ class DriveEndCreateSerializer(serializers.ModelSerializer):
             'status',
             'total_distance'
         ]
+
+    def update(self, instance, validated_data):
+        validated_data['total_distance'] = instance.driveroute_set.filter(is_active=True).aggregate(
+            total_distance=Sum('distance'))['total_distance']
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+
+        return instance
