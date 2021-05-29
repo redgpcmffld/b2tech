@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 from rest_framework import serializers
 from haversine import haversine
@@ -27,6 +28,20 @@ class DriveRouteCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DriveRoute
         fields = '__all__'
+
+    def validate(self, data):
+        admin = self.context.get('admin')
+        q = Q(is_active=True)
+        q.add(Q(pk=data['drive_record'].pk), q.AND)
+        if admin.type == 'ProjectTotalAdmin':
+            q.add(Q(loading_location__site__project__project_admin__pk=admin.pk), q.AND)
+            if not DriveRecord.objects.filter(q).exists():
+                raise serializers.ValidationError('INVALID_DRIVE_RECORD')
+        elif admin.type == 'SiteAdmin':
+            q.add(Q(loading_location__site__site_admin__pk=admin.pk), q.AND)
+            if not DriveRecord.objects.filter(q).exists():
+                raise serializers.ValidationError('INVALID_DRIVE_RECORD')
+        return data
 
     def create(self, validated_data):
         if not DriveRecord.objects.get(pk=validated_data['drive_record'].pk).driveroute_set.filter(
