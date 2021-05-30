@@ -37,6 +37,9 @@ class WorkLoadsView(APIView):
         else:
             q.add(Q(site_admin__pk=admin.pk), q.AND)
 
+        if site := request.GET.get('site'):
+            q.add(Q(pk=site), q.AND)
+
         sites = Site.objects.filter(q)
 
         serializer = WorkLoadSerializer(sites)
