@@ -6,6 +6,7 @@ from django.db.models import Q, Sum
 from rest_framework import serializers
 
 from projects.models.car import Car
+from users.models.driver import Driver
 from projects.models.location import Location
 from projects.models.site import Site
 
@@ -14,6 +15,7 @@ class DriveRecord(models.Model):
     STATUS = ((1, '상차'), (2, '정상종료'), (3, '강제하차승인요청'), (4, '강제하차확인'))
     drive_record_id = models.BigAutoField(primary_key=True)
     car = models.ForeignKey(Car, on_delete=models.SET_NULL, null=True)
+    driver = models.ForeignKey(Driver, on_delete=models.SET_NULL, null=True)
     loading_location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True,
                                          related_name='loading_location')
     unloading_location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True,
