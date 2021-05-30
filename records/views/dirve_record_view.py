@@ -1,7 +1,5 @@
 import math
 
-from datetime import date
-
 from django.db.models import Q, Case, When, Value
 from django.http import HttpResponse
 
@@ -79,9 +77,6 @@ class DriveRecordView(APIView, MyPagination):
             self.pagination_class.page_size = request.GET.get('limit', 10)
             q = Q(is_active=True)
 
-            if request.GET.get('today'):
-                q.add(Q(driving_date=date.today()), q.AND)
-
             if admin.type == 'ProjectTotalAdmin':
                 q.add(Q(car__site__project__project_admin__pk=admin.pk), q.AND)
             else:
@@ -98,7 +93,7 @@ class DriveRecordView(APIView, MyPagination):
             if site := request.GET.get('site'):
                 q.add(Q(car__site__pk=site), q.AND)
 
-            queryset = DriveRecord.objects.filter(q).distinct()
+            queryset = DriveRecord.objects.filter(q).order_by('-driving_date')
 
             page = self.paginate_queryset(queryset)
             serializer = serializer_class(page, many=True)
@@ -151,7 +146,9 @@ class DriveRecordListExportView(APIView):
 
         queryset = DriveRecord.objects.filter(q)
         excel_data = []
-        excel_data.append(('id', '차량번호', '기사이름', '상차지', '하차지', '출발시간', '도착시간', '총거리', '상태', '성상 이름', '성상 무게', '성상 단위'))
+        excel_data.append(
+            ('id', '차량번호', '기사이름', '상차지', '하차지', '출발시간', '도착시간', '총거리', '상태', '성상 이름', '성상 무게', '성상 단위')
+        )
         drive_records = queryset.annotate(
             resource_block=Case(
                 When(loading_location__resource__block='m**3', then=Value(u'm\u00B3')),
