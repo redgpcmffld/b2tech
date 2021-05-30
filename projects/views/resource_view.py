@@ -1,3 +1,5 @@
+import math
+
 from django.db.models import Q, Case, When, Value
 from django.http import HttpResponse
 
@@ -37,13 +39,26 @@ class ResourceView(APIView, MyPagination):
         else:
             q.add(Q(site_admin__pk=admin.pk), q.AND)
 
-        queryset = Site.objects.filter(q)
+        resource_q = None
+        if search := request.GET.get('search'):
+            q.add(Q(name__icontains=search) |
+                  Q(location__resource__name__icontains=search) |
+                  Q(location__resource__type__icontains=search) |
+                  Q(location__resource__block__icontains=search), q.AND)
+
+            resource_q = Q(
+                Q(resource__name__icontains=search) |
+                Q(resource__type__icontains=search) |
+                Q(resource__block__icontains=search)
+            )
+
+        queryset = Site.objects.filter(q).distinct()
 
         self.pagination_class.page_size = request.GET.get('limit', 10)
         page = self.paginate_queryset(queryset)
-        serializer = ResourceViewSerializer(page, many=True)
+        serializer = ResourceViewSerializer(page, many=True, context=resource_q)
 
-        return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
+        return Response({'last_page': math.ceil(queryset.count() / int(self.pagination_class.page_size)),
                          'result': serializer.data}, status=status.HTTP_200_OK)
 
     @login_required
@@ -107,7 +122,7 @@ class ResourceListExportView(APIView):
                 When(location__resource__type='Dirt', then=Value('사토')),
                 When(location__resource__type='Stone', then=Value('바위')),
                 When(location__resource__type='Waste', then=Value('폐기물'))
-                ),
+            ),
             resource_block=Case(
                 When(location__resource__block='m**3', then=Value(u'm\u00B3')),
                 When(~Q(location__resource__block='m**3'), then='location__resource__block'),
@@ -116,7 +131,7 @@ class ResourceListExportView(APIView):
             'location__resource__name',
             'resource_type',
             'resource_block'
-            ).distinct()
+        ).distinct()
 
         for resource in resources:
             excel_data.append(

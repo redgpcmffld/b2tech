@@ -37,4 +37,10 @@ class ResourceViewSerializer(serializers.ModelSerializer):
     def get_resource_info(self, site):
         resource = site.location_set.values('resource__name', 'resource__resource_id', 'resource__type',
                                             'resource__block').distinct()
+
+        if self.context:
+            resource = site.location_set.filter(self.context).values('resource__name', 'resource__resource_id',
+                                                                     'resource__type',
+                                                                     'resource__block').distinct()
+
         return resource

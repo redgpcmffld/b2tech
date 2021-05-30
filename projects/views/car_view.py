@@ -1,3 +1,5 @@
+import math
+
 from django.db.models import Q, Case, When, Value
 from django.http import HttpResponse
 
@@ -23,16 +25,25 @@ class CarView(APIView, MyPagination):
     def get(self, request):
         admin = request.user
 
+        q = Q(is_active=True)
+
         if admin.type == 'ProjectTotalAdmin':
-            queryset = Car.objects.filter(is_active=True, site__project__project_admin__pk=admin.pk)
+            q.add(Q(site__project__project_admin__pk=admin.pk), q.AND)
         else:
-            queryset = Car.objects.filter(is_active=True, site__site_admin__pk=admin.pk)
+            q.add(Q(site__site_admin__pk=admin.pk), q.AND)
+
+        if search := request.GET.get('search'):
+            q.add(Q(type__icontains=search) |
+                  Q(number__icontains=search) |
+                  Q(site__name__icontains=search), q.AND)
+
+        queryset = Car.objects.filter(q).distinct()
 
         self.pagination_class.page_size = request.GET.get('limit', 10)
         page = self.paginate_queryset(queryset)
         serializer = CarViewSerializer(page, many=True)
 
-        return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
+        return Response({'last_page': math.ceil(queryset.count() / int(self.pagination_class.page_size)),
                          'result': serializer.data}, status=status.HTTP_200_OK)
 
     @login_required

@@ -1,3 +1,5 @@
+import math
+
 from datetime import date
 
 from django.db.models import Q, Case, When, Value
@@ -82,10 +84,19 @@ class DriveRecordView(APIView, MyPagination):
             else:
                 q.add(Q(car__site__site_admin__pk=admin.pk), q.AND)
 
-            queryset = DriveRecord.objects.filter(q)
+            if search := request.GET.get('search'):
+                q.add(Q(car__number__icontains=search) |
+                      Q(car__driver__name__icontains=search) |
+                      Q(loading_location__name__icontains=search) |
+                      Q(loading_time__icontains=search) |
+                      Q(unloading_location__name__icontains=search) |
+                      Q(unloading_time__icontains=search), q.AND)
+
+            queryset = DriveRecord.objects.filter(q).distinct()
+
             page = self.paginate_queryset(queryset)
             serializer = serializer_class(page, many=True)
-            return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
+            return Response({'last_page': math.ceil(queryset.count() / int(self.pagination_class.page_size)),
                              'result': serializer.data}, status=status.HTTP_200_OK)
         except DriveRecord.DoesNotExist:
             return Response({'message': 'DRIVE_RECORD_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
