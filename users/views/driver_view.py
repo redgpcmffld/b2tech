@@ -1,8 +1,11 @@
+import math
+
+from django.db.models import Q
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from projects.models.site import Site
 from ..models.driver import Driver, DriverCreateSerializer, DriverViewSerializer
 
 from utils import login_required
@@ -13,14 +16,25 @@ class DriverView(APIView, MyPagination):
     @login_required
     def get(self, request):
         admin = request.user
-        self.pagination_class.page_size = request.GET.get('limit', 10)
+
+        q = Q(is_active=True)
+
         if admin.type == 'ProjectTotalAdmin':
-            queryset = Driver.objects.filter(is_active=True, site__project__project_admin__pk=admin.pk)
+            q.add(Q(site__project__project_admin__pk=admin.pk), q.AND)
         else:
-            queryset = Driver.objects.filter(is_active=True, site__site_admin__pk=admin.pk)
+            q.add(Q(site__site_admin__pk=admin.pk), q.AND)
+
+        if search := request.GET.get('search'):
+            q.add(Q(site__name__icontains=search) |
+                  Q(name__icontains=search) |
+                  Q(phone_number__icontains=search), q.AND)
+
+        queryset = Driver.objects.filter(q).distinct()
+
+        self.pagination_class.page_size = request.GET.get('limit', 10)
         page = self.paginate_queryset(queryset)
         serializer = DriverViewSerializer(page, many=True)
-        return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
+        return Response({'last_page': math.ceil(queryset.count() / int(self.pagination_class.page_size)),
                          'result': serializer.data}, status=status.HTTP_200_OK)
 
     @login_required

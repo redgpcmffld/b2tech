@@ -1,3 +1,5 @@
+import math
+
 from datetime import date
 
 from django.db.models import Q, Case, When, Value
@@ -85,20 +87,28 @@ class DriveRecordView(APIView, MyPagination):
             else:
                 q.add(Q(car__site__site_admin__pk=admin.pk), q.AND)
 
+            if search := request.GET.get('search'):
+                q.add(Q(car__number__icontains=search) |
+                      Q(car__driver__name__icontains=search) |
+                      Q(loading_location__name__icontains=search) |
+                      Q(loading_time__icontains=search) |
+                      Q(unloading_location__name__icontains=search) |
+                      Q(unloading_time__icontains=search), q.AND)
+
             if site := request.GET.get('site'):
                 q.add(Q(car__site__pk=site), q.AND)
 
-            queryset = DriveRecord.objects.filter(q)
+            queryset = DriveRecord.objects.filter(q).distinct()
+
             page = self.paginate_queryset(queryset)
             serializer = serializer_class(page, many=True)
-            return Response({'last_page': queryset.count() // int(self.pagination_class.page_size),
+            return Response({'last_page': math.ceil(queryset.count() / int(self.pagination_class.page_size)),
                              'result': serializer.data}, status=status.HTTP_200_OK)
         except DriveRecord.DoesNotExist:
             return Response({'message': 'DRIVE_RECORD_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class DriveRecordDetailView(APIView):
-
     @login_required
     def post(self, request, drive_record_id):
         request.data['drive_record'] = drive_record_id
@@ -147,7 +157,7 @@ class DriveRecordListExportView(APIView):
                 When(loading_location__resource__block='m**3', then=Value(u'm\u00B3')),
                 When(~Q(loading_location__resource__block='m**3'), then='loading_location__resource__block'),
             ),
-            drive_status = Case(
+            drive_status=Case(
                 When(status=1, then=Value('상차')),
                 When(status=2, then=Value('정상종료')),
                 When(status=3, then=Value('강제하차승인요청')),
