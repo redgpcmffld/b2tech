@@ -42,7 +42,8 @@ class DriveRecordViewSerializer(serializers.ModelSerializer):
     loading_location = serializers.SlugRelatedField(slug_field='name', read_only=True)
     unloading_location = serializers.SlugRelatedField(slug_field='name', read_only=True)
     transport_weight = serializers.SerializerMethodField(method_name='get_transport_weight')
-    car = serializers.SerializerMethodField(method_name='get_car_driver_name')
+    car = serializers.SlugRelatedField(slug_field='number', read_only=True)
+    driver = serializers.SlugRelatedField(slug_field='name', read_only=True)
     status = serializers.SerializerMethodField(method_name='get_status_name')
     total_distance = serializers.SerializerMethodField(method_name='get_total_distance')
 
@@ -51,6 +52,7 @@ class DriveRecordViewSerializer(serializers.ModelSerializer):
         fields = [
             'drive_record_id',
             'car',
+            'driver',
             'loading_location',
             'unloading_location',
             'loading_time',
@@ -62,48 +64,34 @@ class DriveRecordViewSerializer(serializers.ModelSerializer):
             'resource'
         ]
 
-    def get_resource_name(self, obj):
-        result = {
-            'resource_id': obj.loading_location.resource.get(is_active=True).pk,
-            'name': obj.loading_location.resource.get(is_active=True).name
-        }
-        return result
+    def get_resource_name(self, drive_record):
+        return drive_record.loading_location.resource.get(is_active=True).name
 
-    def get_loading_time(self, obj):
-        result = obj.loading_time.strftime('%y년 %m월 %d일 %H시 %M분')
-        return result
+    def get_loading_time(self, drive_record):
+        return drive_record.loading_time.strftime('%y년 %m월 %d일 %H시 %M분')
 
-    def get_unloading_time(self, obj):
-        result = obj.loading_time.strftime('%y년 %m월 %d일 %H시 %M분')
-        return result
+    def get_unloading_time(self, drive_record):
+        return drive_record.loading_time.strftime('%y년 %m월 %d일 %H시 %M분')
 
-    def get_driving_date(self, obj):
-        result = obj.loading_time.strftime('%y년 %m월 %d일')
-        return result
+    def get_driving_date(self, drive_record):
+        return drive_record.loading_time.strftime('%y년 %m월 %d일')
 
-    def get_transport_weight(self, obj):
-        result = f'{obj.transport_weight}{obj.loading_location.resource.get(is_active=True).block}'
-        return result
+    def get_transport_weight(self, drive_record):
+        return f'{drive_record.transport_weight}{drive_record.loading_location.resource.get(is_active=True).block}'
 
-    def get_car_driver_name(self, obj):
-        result = {
-            'number': obj.car.number,
-            'driver_name': obj.car.driver.filter(is_active=True).first().name
-        }
-        return result
-
-    def get_status_name(self, obj):
+    def get_status_name(self, drive_record):
         STATUS = ('상차', '정상종료', '강제하차승인요청' '강제하차확인')
-        return STATUS[obj.status - 1]
+        return STATUS[drive_record.status - 1]
 
-    def get_total_distance(self, obj):
-        if obj.total_distance is None:
-            obj.total_distance = "%.4f" % 0
-        return f'{obj.total_distance}km'
+    def get_total_distance(self, drive_record):
+        if drive_record.total_distance is None:
+            drive_record.total_distance = "%.4f" % 0
+        return f'{drive_record.total_distance}km'
 
 
 class DriveRecordCreateSerializer(serializers.ModelSerializer):
     car = serializers.PrimaryKeyRelatedField(required=True, queryset=Car.objects.filter(is_active=True))
+    driver = serializers.PrimaryKeyRelatedField(required=True, queryset=Driver.objects.filter(is_active=True))
     loading_location = serializers.PrimaryKeyRelatedField(
         queryset=Location.objects.filter(is_active=True, type=True), required=True)
     unloading_location = serializers.PrimaryKeyRelatedField(
@@ -118,6 +106,7 @@ class DriveRecordCreateSerializer(serializers.ModelSerializer):
         fields = [
             'drive_record_id',
             'car',
+            'driver',
             'loading_location',
             'unloading_location',
             'loading_time',
@@ -127,8 +116,9 @@ class DriveRecordCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        admin = self.context.get('admin')
-        car_pk = self.context.get('car_pk')
+        admin = self.context['admin']
+        car_pk = self.context['car_pk']
+        driver_pk = self.context['driver_pk']
         loading_location = data['loading_location']
         unloading_location = data['unloading_location']
         q = Q(is_active=True)
@@ -137,14 +127,18 @@ class DriveRecordCreateSerializer(serializers.ModelSerializer):
             loading_location_site_check = Site.objects.filter(q, location__pk=loading_location.pk).exists()
             unloading_location_site_check = Site.objects.filter(q, location__pk=unloading_location.pk).exists()
             car_site_check = Site.objects.filter(q, car__pk=car_pk).exists()
-            if not (loading_location_site_check or unloading_location_site_check or car_site_check):
+            driver_site_check = Site.objects.filter(q, driver__pk=driver_pk).exists()
+            if not (
+                    loading_location_site_check or unloading_location_site_check or car_site_check or driver_site_check):
                 raise serializers.ValidationError('INVALID_LOCATION')
         elif admin.type == 'SiteAdmin':
             q.add(Q(site_admin__pk=admin.pk), q.AND)
             loading_location_site_check = Site.objects.filter(q, location__pk=loading_location.pk).exists()
             unloading_location_site_check = Site.objects.filter(q, location__pk=unloading_location.pk).exists()
             car_site_check = Site.objects.filter(q, car__pk=car_pk).exists()
-            if not (loading_location_site_check or unloading_location_site_check or car_site_check):
+            driver_site_check = Site.objects.filter(q, driver__pk=driver_pk).exists()
+            if not (
+                    loading_location_site_check or unloading_location_site_check or car_site_check or driver_site_check):
                 raise serializers.ValidationError('INVALID_LOCATION')
 
         if loading_location.resource.get(is_active=True).pk != unloading_location.resource.get(is_active=True).pk:
