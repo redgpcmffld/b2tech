@@ -29,7 +29,10 @@ class DriveRecordView(APIView, MyPagination):
             admin = request.user
             if drive_record_id is None:
                 car_pk = request.data['car']
-                serializer = DriveRecordCreateSerializer(data=request.data, context={'admin': admin, 'car_pk': car_pk})
+                driver_pk = request.data['driver']
+                serializer = DriveRecordCreateSerializer(
+                    data=request.data, context={'admin': admin, 'car_pk': car_pk, 'driver_pk': driver_pk}
+                )
                 if serializer.is_valid():
                     serializer.save()
                     drive_route = {
@@ -92,6 +95,9 @@ class DriveRecordView(APIView, MyPagination):
                       Q(unloading_location__name__icontains=search) |
                       Q(unloading_time__icontains=search), q.AND)
 
+            if site := request.GET.get('site'):
+                q.add(Q(car__site__pk=site), q.AND)
+
             queryset = DriveRecord.objects.filter(q).distinct()
 
             page = self.paginate_queryset(queryset)
@@ -103,7 +109,6 @@ class DriveRecordView(APIView, MyPagination):
 
 
 class DriveRecordDetailView(APIView):
-
     @login_required
     def post(self, request, drive_record_id):
         request.data['drive_record'] = drive_record_id
@@ -146,21 +151,28 @@ class DriveRecordListExportView(APIView):
 
         queryset = DriveRecord.objects.filter(q)
         excel_data = []
-        excel_data.append(('id', '차량번호', '상차지', '하차지', '출발시간', '도착시간', '총거리', '상태', '성상 이름', '성상 무게', '성상 단위'))
+        excel_data.append(('id', '차량번호', '기사이름', '상차지', '하차지', '출발시간', '도착시간', '총거리', '상태', '성상 이름', '성상 무게', '성상 단위'))
         drive_records = queryset.annotate(
             resource_block=Case(
                 When(loading_location__resource__block='m**3', then=Value(u'm\u00B3')),
                 When(~Q(loading_location__resource__block='m**3'), then='loading_location__resource__block'),
+            ),
+            drive_status=Case(
+                When(status=1, then=Value('상차')),
+                When(status=2, then=Value('정상종료')),
+                When(status=3, then=Value('강제하차승인요청')),
+                When(status=4, then=Value('강제하차확인'))
             )
         ).values_list(
             'pk',
             'car__number',
+            'driver__name',
             'loading_location__name',
             'unloading_location__name',
             'loading_time',
             'unloading_time',
             'total_distance',
-            'status',
+            'drive_status',
             'loading_location__resource__name',
             'transport_weight',
             'resource_block'

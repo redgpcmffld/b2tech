@@ -111,12 +111,14 @@ class WorkLoadSerializer(serializers.Serializer):
 
         month = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
         types = 'Iron', 'Dirt', 'Stone', 'Waste'
-        results = {}
+        results = []
         for m in month:
             q1 = Q(location__loading_location__driving_date__month=m)
+            result = {}
             for type in types:
                 q2 = Q(location__resource__type=type)
                 workloads = sites.aggregate(workloads=Count('location__loading_location', filter=q1 & q2))
-                results[f'{m}_{type}_workloads'] = workloads['workloads']
+                result[f'{type}'] = workloads['workloads']
+            results.append(result)
 
         return results
