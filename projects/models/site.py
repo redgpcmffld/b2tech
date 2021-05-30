@@ -20,23 +20,13 @@ class Site(models.Model):
         db_table = 'sites'
 
 
-class MyDateField(serializers.DateField):
-
-    def to_internal_value(self, value):
-        return f'{value}-01'
-
-
 class SiteCreateSerializer(serializers.ModelSerializer):
-    start_date = MyDateField()
-    end_date = MyDateField()
+    start_date = serializers.DateField(input_formats=['%Y-%m'])
+    end_date = serializers.DateField(input_formats=['%Y-%m'])
 
     class Meta:
         model = Site
         fields = '__all__'
-
-    def validate_name(self, attrs):
-        validators.RegexValidator(r'^[가-힣a-zA-Z0-9\s]{1,50}$', 'INVALID_NAME')(attrs)
-        return attrs
 
 
 class SiteViewSerializer(serializers.ModelSerializer):
@@ -46,5 +36,5 @@ class SiteViewSerializer(serializers.ModelSerializer):
         model = Site
         fields = ['site_id', 'name', 'start_date', 'end_date', 'project']
 
-    def get_project(self, obj):
-        return {'project_id': obj.project.pk, 'name': obj.project.name}
+    def get_project(self, site):
+        return {'project_id': site.project.pk, 'name': site.project.name}

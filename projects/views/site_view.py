@@ -1,6 +1,6 @@
 import math
 
-from django.db.models import Q
+from django.db.models import Q, Func, F, Value, CharField
 from django.http import HttpResponse
 
 from openpyxl import Workbook
@@ -91,14 +91,15 @@ class SiteListExportView(APIView):
         queryset = Site.objects.filter(q)
         excel_data = []
         excel_data.append(('id', '프로젝트명', '현장명', '시작연도', '시작월', '종료연도', '종료월'))
-        sites = queryset.values_list(
+        sites = queryset.annotate(
+            start=Func(F('start_date'), Value('%Y-%m'), function='DATE_FORMAT', output_field=CharField()),
+            end=Func(F('end_date'), Value('%Y-%m'), function='DATE_FORMAT', output_field=CharField())
+        ).values_list(
             'pk',
             'project__name',
             'name',
-            'start_date__year',
-            'start_date__month',
-            'end_date__year',
-            'end_date__month'
+            'start',
+            'end'
         )
         for site in sites:
             excel_data.append(

@@ -45,6 +45,6 @@ class DriverCreateSerializer(serializers.ModelSerializer):
         if admin.type == 'ProjectTotalAdmin':
             if not Site.objects.filter(project__project_admin__pk=admin.pk).exists():
                 raise serializers.ValidationError('INVALID_SITE')
-        if not Site.objects.filter(site_admin__pk=admin.pk).exists():
+        elif not Site.objects.filter(site_admin__pk=admin.pk).exists():
             raise serializers.ValidationError('INVALID_SITE')
         return attrs

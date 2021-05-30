@@ -1,6 +1,6 @@
 import math
 
-from django.db.models import Q, Case, When, Value
+from django.db.models import Q, Case, When, Value, F
 from django.http import HttpResponse
 
 from openpyxl import Workbook
@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from projects.models.resource import Resource, ResourceCreateSerializer, ResourceViewSerializer
+from projects.models.resource import Resource, ResourceCreateSerializer
 from projects.models.site import Site
 
 from utils import login_required
@@ -31,35 +31,40 @@ class ResourceView(APIView, MyPagination):
     @login_required
     def get(self, request):
         admin = request.user
+        limit = int(request.GET.get('limit', 10))
+        page = int(request.GET.get('page', 1))
 
         q = Q(is_active=True)
 
         if admin.type == 'ProjectTotalAdmin':
-            q.add(Q(project__project_admin__pk=admin.pk), q.AND)
+            q.add(Q(location__site__project__project_admin__pk=admin.pk), q.AND)
         else:
-            q.add(Q(site_admin__pk=admin.pk), q.AND)
+            q.add(Q(location__site__site_admin__pk=admin.pk), q.AND)
 
-        resource_q = None
         if search := request.GET.get('search'):
-            q.add(Q(name__icontains=search) |
-                  Q(location__resource__name__icontains=search) |
-                  Q(location__resource__type__icontains=search) |
-                  Q(location__resource__block__icontains=search), q.AND)
+            for keyword in search.split(' '):
+                q.add(Q(name__icontains=keyword) |
+                      Q(type__icontains=keyword) |
+                      Q(block__icontains=keyword) |
+                      Q(location__site__name__icontains=keyword), q.AND)
 
-            resource_q = Q(
-                Q(resource__name__icontains=search) |
-                Q(resource__type__icontains=search) |
-                Q(resource__block__icontains=search)
-            )
+        queryset = Resource.objects.filter(q).values(
+            'resource_id',
+            'name',
+            'type',
+            unit=Case(When(block='m**3', then=Value(u'm\u00B3')),
+                      When(~Q(block='m**3'), then='block')),
+            site_name=F('location__site__name'),
+            site_id=F('location__site__pk')).distinct()
 
-        queryset = Site.objects.filter(q).distinct()
-
-        self.pagination_class.page_size = request.GET.get('limit', 10)
-        page = self.paginate_queryset(queryset)
-        serializer = ResourceViewSerializer(page, many=True, context=resource_q)
-
-        return Response({'last_page': math.ceil(queryset.count() / int(self.pagination_class.page_size)),
-                         'result': serializer.data}, status=status.HTTP_200_OK)
+        last_page = math.ceil(queryset.count() / limit)
+        if not search and (page > last_page):
+            return Response({'message': 'PAGE_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+        page_start = (page - 1) * limit
+        page_end = page * limit
+        queryset = queryset[page_start: page_end]
+        results = [resource for resource in queryset]
+        return Response({'last_page': last_page, 'result': results}, status=status.HTTP_200_OK)
 
     @login_required
     def post(self, request):
