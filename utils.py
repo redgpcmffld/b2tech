@@ -11,7 +11,7 @@ def login_required(func):
     def decorator(self, request, *args, **kwargs):
         try:
             if request.headers.get('Authorization') is None:
-                return Response({'message': 'TOKEN_NOT_FOUND'})
+                return Response({'message': 'TOKEN_NOT_FOUND'}, status=status.HTTP_400_BAD_REQUEST)
             access_token = request.headers['Authorization']
             user = jwt.decode(access_token, SECRET_KEY, algorithms=algorithms)
             request.user = Admin.objects.get(pk=user['admin_id'])
