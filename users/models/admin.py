@@ -43,5 +43,5 @@ class AdminCreateSerializer(serializers.ModelSerializer):
     def validate_password(self, password):
         validators.RegexValidator(r'^(?=.*\w)(?=.*[!@#$%&*])(\S){8,}$',
                                   '비밀번호는 영문,숫자,특수문자 포함 8글자 이상이어야 합니다.')(password)
-        attrs = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         return password
