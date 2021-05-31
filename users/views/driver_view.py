@@ -25,9 +25,10 @@ class DriverView(APIView, MyPagination):
             q.add(Q(site__site_admin__pk=admin.pk), q.AND)
 
         if search := request.GET.get('search'):
-            q.add(Q(site__name__icontains=search) |
-                  Q(name__icontains=search) |
-                  Q(phone_number__icontains=search), q.AND)
+            for keyword in search.split(' '):
+                q.add(Q(site__name__icontains=keyword) |
+                      Q(name__icontains=keyword) |
+                      Q(phone_number__icontains=keyword), q.AND)
 
         queryset = Driver.objects.filter(q).distinct()
 

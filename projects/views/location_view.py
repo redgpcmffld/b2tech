@@ -27,14 +27,15 @@ class LocationView(APIView, MyPagination):
             q.add(Q(site__site_admin__pk=admin.pk), q.AND)
 
         if search := request.GET.get('search'):
-            q.add(Q(site__name__icontains=search) |
-                  Q(type__icontains=search) |
-                  Q(name__icontains=search) |
-                  Q(address__icontains=search) |
-                  Q(longitude__icontains=search) |
-                  Q(latitude__icontains=search) |
-                  Q(range__icontains=search) |
-                  Q(is_allow__icontains=search), q.AND)
+            for keyword in search.split(' '):
+                q.add(Q(site__name__icontains=keyword) |
+                      Q(type__icontains=keyword) |
+                      Q(name__icontains=keyword) |
+                      Q(address__icontains=keyword) |
+                      Q(longitude__icontains=keyword) |
+                      Q(latitude__icontains=keyword) |
+                      Q(range__icontains=keyword) |
+                      Q(is_allow__icontains=keyword), q.AND)
 
         queryset = Location.objects.filter(q).distinct()
 

@@ -31,9 +31,9 @@ class CarCreateSerializer(serializers.ModelSerializer):
         model = Car
         fields = '__all__'
 
-    def validate_number(self, attrs):
-        validators.RegexValidator(r'^[가-힣]{2}\d{2}[가-힣]{1}\d{4}$', 'INVALID_NUMBER')(attrs)
-        return attrs
+    def validate_number(self, number):
+        validators.RegexValidator(r'^[가-힣]{2}\d{2}[가-힣]{1}\d{4}$', 'INVALID_NUMBER')(number)
+        return number
 
 
 class CarViewSerializer(serializers.ModelSerializer):
@@ -44,13 +44,13 @@ class CarViewSerializer(serializers.ModelSerializer):
         model = Car
         fields = ['car_id', 'type', 'number', 'driver', 'site']
 
-    def get_site(self, obj):
-        return {'site_id': obj.site.pk, 'name': obj.site.name}
+    def get_site(self, car):
+        return {'site_id': car.site.pk, 'name': car.site.name}
 
-    def get_driver(self, obj):
+    def get_driver(self, car):
         result = [{
             'driver_id': driver.pk,
             'name': driver.name,
             'phone_number': driver.phone_number
-        } for driver in obj.driver.filter(is_active=True)]
+        } for driver in car.driver.filter(is_active=True)]
         return result

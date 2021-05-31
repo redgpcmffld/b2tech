@@ -83,12 +83,15 @@ class DriveRecordView(APIView, MyPagination):
                 q.add(Q(car__site__site_admin__pk=admin.pk), q.AND)
 
             if search := request.GET.get('search'):
-                q.add(Q(car__number__icontains=search) |
-                      Q(car__driver__name__icontains=search) |
-                      Q(loading_location__name__icontains=search) |
-                      Q(loading_time__icontains=search) |
-                      Q(unloading_location__name__icontains=search) |
-                      Q(unloading_time__icontains=search), q.AND)
+                for keyword in search.split(' '):
+                    q.add(Q(car__number__icontains=keyword) |
+                          Q(driver__name__icontains=keyword) |
+                          Q(loading_location__name__icontains=keyword) |
+                          Q(loading_time__icontains=keyword) |
+                          Q(unloading_location__name__icontains=keyword) |
+                          Q(unloading_time__icontains=keyword) |
+                          Q(loading_location__resource__name__icontains=keyword) |
+                          Q(driving_date__icontains=keyword), q.AND)
 
             if site := request.GET.get('site'):
                 q.add(Q(car__site__pk=site), q.AND)
