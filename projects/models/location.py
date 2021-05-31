@@ -56,10 +56,10 @@ class LocationViewSerializer(serializers.ModelSerializer):
             'is_allow'
         ]
 
-    def get_site(self, obj):
+    def get_site(self, location):
         return [
             {
                 'site_id': site.pk,
                 'name': site.name
             }
-            for site in obj.site.filter(is_active=True)]
+            for site in location.site.filter(is_active=True)]

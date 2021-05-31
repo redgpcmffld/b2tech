@@ -33,9 +33,10 @@ class CarView(APIView, MyPagination):
             q.add(Q(site__site_admin__pk=admin.pk), q.AND)
 
         if search := request.GET.get('search'):
-            q.add(Q(type__icontains=search) |
-                  Q(number__icontains=search) |
-                  Q(site__name__icontains=search), q.AND)
+            for keyword in search.split(' '):
+                q.add(Q(type__icontains=keyword) |
+                      Q(number__icontains=keyword) |
+                      Q(site__name__icontains=keyword), q.AND)
 
         queryset = Car.objects.filter(q).distinct()
 
