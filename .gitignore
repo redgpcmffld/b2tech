@@ -437,6 +437,5 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,visualstudiocode,django,vim,macos,linux,windowsd
 
 my_settings.py
-*.csv
-db_uploader.py
 middleware.py
+db_upload
