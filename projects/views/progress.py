@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from projects.models.site import Site
-from ..models.progress import ProgressSerializer, WorkLoadSerializer
+from projects.models.sites import Site
+from projects.models.progress import ProgressSerializer, WorkLoadSerializer
 
 from utils import login_required
 
@@ -29,7 +29,7 @@ class ProgressView(APIView):
 
 class WorkLoadsView(APIView):
     @login_required
-    def get(self, request):
+    def get(self, request, site_id=None):
         admin = request.user
         q = Q(is_active=True)
         if admin.type == 'ProjectTotalAdmin':
@@ -37,8 +37,8 @@ class WorkLoadsView(APIView):
         else:
             q.add(Q(site_admin__pk=admin.pk), q.AND)
 
-        if site := request.GET.get('site'):
-            q.add(Q(pk=site), q.AND)
+        if site_id:
+            q.add(Q(pk=site_id), q.AND)
 
         sites = Site.objects.filter(q)
 

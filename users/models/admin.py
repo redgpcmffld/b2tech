@@ -4,8 +4,8 @@ from django.core import validators
 import bcrypt
 from rest_framework import serializers
 
-from projects.models.project import Project
-from projects.models.site import Site
+from projects.models.projects import Project
+from projects.models.sites import Site
 
 
 class Admin(models.Model):

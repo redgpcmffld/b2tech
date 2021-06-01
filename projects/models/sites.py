@@ -2,7 +2,7 @@ from django.db import models
 
 from rest_framework import serializers
 
-from projects.models.project import Project
+from projects.models.projects import Project
 
 
 class Site(models.Model):

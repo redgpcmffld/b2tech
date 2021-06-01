@@ -1,6 +1,6 @@
 from django.urls import path
 
-from projects.views.car_view import CarTypeView, CarView, CarListExportView
+from projects.views.cars import CarTypeView, CarView, CarListExportView
 
 urlpatterns = [
     path('/types', CarTypeView.as_view(), name='car_types_list'),

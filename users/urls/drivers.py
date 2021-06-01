@@ -1,6 +1,6 @@
 from django.urls import path
 
-from ..views.driver_view import DriverView
+from ..views.drivers import DriverView
 
 urlpatterns = [
     path('/<int:driver_id>', DriverView.as_view(), name='delete_driver'),

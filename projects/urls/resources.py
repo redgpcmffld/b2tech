@@ -1,6 +1,6 @@
 from django.urls import path
 
-from projects.views.resource_view import ResourceTypeView, ResourceView, ResourceBlockView, ResourceListExportView
+from projects.views.resources import ResourceTypeView, ResourceView, ResourceBlockView, ResourceListExportView
 
 urlpatterns = [
     path('/blocks', ResourceBlockView.as_view(), name='resource_types_list'),

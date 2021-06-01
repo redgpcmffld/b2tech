@@ -8,13 +8,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from ..models.drive_record import (
+from ..models.drive_records import (
     DriveRecord,
     DriveRecordViewSerializer,
     DriveRecordCreateSerializer,
     DriveRecordUpdateSerializer
 )
-from ..models.drive_route import DriveRouteCreateSerializer, DriveRouteViewSerializer
+from ..models.drive_routes import DriveRouteCreateSerializer, DriveRouteViewSerializer
 
 from utils import login_required
 from pagination import MyPagination
@@ -38,7 +38,7 @@ class DriveRecordView(APIView, MyPagination):
                         'longitude': float(serializer.instance.loading_location.longitude),
                         'latitude': float(serializer.instance.loading_location.latitude)
                     }
-                    drive_route_serializer = DriveRouteCreateSerializer(data=drive_route)
+                    drive_route_serializer = DriveRouteCreateSerializer(data=drive_route, context={'admin': admin})
                     if drive_route_serializer.is_valid():
                         drive_route_serializer.save()
                         return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)
@@ -53,7 +53,7 @@ class DriveRecordView(APIView, MyPagination):
                     'longitude': float(serializer.instance.unloading_location.longitude),
                     'latitude': float(serializer.instance.unloading_location.latitude)
                 }
-                drive_route_serializer = DriveRouteCreateSerializer(data=drive_route)
+                drive_route_serializer = DriveRouteCreateSerializer(data=drive_route, context={'admin': admin})
                 if drive_route_serializer.is_valid():
                     drive_route_serializer.save()
                     serializer.save()

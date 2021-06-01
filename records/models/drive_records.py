@@ -5,10 +5,10 @@ from django.db.models import Q, Sum
 
 from rest_framework import serializers
 
-from projects.models.car import Car
+from projects.models.cars import Car
 from users.models.driver import Driver
-from projects.models.location import Location
-from projects.models.site import Site
+from projects.models.locations import Location
+from projects.models.sites import Site
 
 
 class DriveRecord(models.Model):
