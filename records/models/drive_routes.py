@@ -4,7 +4,7 @@ from django.db.models import Q
 from rest_framework import serializers
 from haversine import haversine
 
-from .drive_record import DriveRecord
+from .drive_records import DriveRecord
 
 
 class DriveRoute(models.Model):

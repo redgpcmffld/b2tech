@@ -4,7 +4,7 @@ from django.core import validators
 
 from rest_framework import serializers
 
-from projects.models.site import Site
+from projects.models.sites import Site
 
 
 class Driver(models.Model):
@@ -21,7 +21,7 @@ class Driver(models.Model):
 
 
 class DriverViewSerializer(serializers.ModelSerializer):
-    site = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    site = serializers.SerializerMethodField(method_name='get_site_info')
     created_at = serializers.DateField(write_only=True, required=False)
     updated_at = serializers.DateField(write_only=True, required=False)
     is_active = serializers.BooleanField(write_only=True, required=False)
@@ -29,6 +29,12 @@ class DriverViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Driver
         fields = '__all__'
+
+    def get_site_info(self, driver):
+        return {
+            'site_id': driver.site.pk,
+            'name': driver.site.name
+        }
 
 
 class DriverCreateSerializer(serializers.ModelSerializer):

@@ -3,7 +3,7 @@ from django.core import validators
 
 from rest_framework import serializers
 
-from projects.models.site import Site
+from projects.models.sites import Site
 from users.models.driver import Driver
 
 

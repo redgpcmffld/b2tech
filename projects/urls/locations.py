@@ -1,6 +1,6 @@
 from django.urls import path
 
-from projects.views.location_view import LocationView, LocationListExportView
+from projects.views.locations import LocationView, LocationListExportView
 
 urlpatterns = [
     path('/<int:location_id>', LocationView.as_view(), name='delete_location'),

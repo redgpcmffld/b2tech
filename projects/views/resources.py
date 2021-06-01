@@ -8,8 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from projects.models.resource import Resource, ResourceCreateSerializer
-from projects.models.site import Site
+from projects.models.resources import Resource, ResourceCreateSerializer
+from projects.models.sites import Site
 
 from utils import login_required
 from pagination import MyPagination

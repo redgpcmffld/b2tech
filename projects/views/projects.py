@@ -1,8 +1,8 @@
 from django.views import View
 from django.http import JsonResponse
 
-from projects.models.project import Project
-from projects.models.site import Site
+from projects.models.projects import Project
+from projects.models.sites import Site
 
 from utils import login_required
 

@@ -1,10 +1,10 @@
 from datetime import date
 
-from django.db.models import Sum, Max, Min, Q, Count
+from django.db.models import Sum, Max, Min, Q, Count, Case, When
 
 from rest_framework import serializers
 
-from projects.models.site import Site
+from projects.models.sites import Site
 
 
 class ProgressSerializer(serializers.Serializer):
@@ -32,7 +32,7 @@ class ProgressSerializer(serializers.Serializer):
             today_workloads=Sum('loading_location__transport_weight',
                                 filter=Q(loading_location__driving_date=date.today()) & Q(loading_location__status=2)))[
             'today_workloads']
-        days = (date.fromisoformat(site.end_date) - date.fromisoformat(site.start_date)).days
+        days = (site.end_date - site.start_date).days
         today_plan = plan // days
         if today_workloads is None:
             today_workloads = 0
@@ -109,8 +109,8 @@ class WorkLoadSerializer(serializers.Serializer):
 
     def get_detail_workloads(self, sites):
 
-        month = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-        types = 'Iron', 'Dirt', 'Stone', 'Waste'
+        month = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+        types = ('Iron', 'Dirt', 'Stone', 'Waste')
         results = []
         for m in month:
             q1 = Q(location__loading_location__driving_date__month=m)

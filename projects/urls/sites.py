@@ -1,6 +1,6 @@
 from django.urls import path
 
-from projects.views.site_view import SiteView, SiteListExportView
+from projects.views.sites import SiteView, SiteListExportView
 
 urlpatterns = [
     path('/<int:site_id>', SiteView.as_view(), name='delete_site'),
