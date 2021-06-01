@@ -1,6 +1,6 @@
 from datetime import date
 
-from django.db.models import Sum, Max, Min, Q, Count, Case, When
+from django.db.models import Sum, Max, Min, Q, Count
 
 from rest_framework import serializers
 
@@ -112,6 +112,7 @@ class WorkLoadSerializer(serializers.Serializer):
         month = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
         types = ('Iron', 'Dirt', 'Stone', 'Waste')
         results = []
+
         for m in month:
             q1 = Q(location__loading_location__driving_date__month=m)
             result = {}

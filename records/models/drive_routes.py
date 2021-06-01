@@ -30,7 +30,7 @@ class DriveRouteCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, data):
-        admin = self.context.get('admin')
+        admin = self.context['admin']
         q = Q(is_active=True)
         q.add(Q(pk=data['drive_record'].pk), q.AND)
         if admin.type == 'ProjectTotalAdmin':
@@ -97,7 +97,7 @@ class DriveRouteViewSerializer(serializers.Serializer):
         return result
 
     def get_drive_route_info(self, drive_record):
-        if str(type(self.instance)) == "<class 'records.models.drive_record.DriveRecord'>":
+        if str(type(self.instance)) == "<class 'records.models.drive_records.DriveRecord'>":
             result = [
                 {
                     'drive_route_id': drive_route['pk'],
