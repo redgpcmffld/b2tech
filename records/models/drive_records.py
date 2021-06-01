@@ -129,8 +129,12 @@ class DriveRecordCreateSerializer(serializers.ModelSerializer):
             car_site_check = Site.objects.filter(q, car__pk=car_pk).exists()
             driver_site_check = Site.objects.filter(q, driver__pk=driver_pk).exists()
             if not (
-                    loading_location_site_check or unloading_location_site_check or car_site_check or driver_site_check):
-                raise serializers.ValidationError('INVALID_LOCATION')
+                    loading_location_site_check and
+                    unloading_location_site_check and
+                    car_site_check and
+                    driver_site_check
+            ):
+                raise serializers.ValidationError('INVALID_DATA')
         elif admin.type == 'SiteAdmin':
             q.add(Q(site_admin__pk=admin.pk), q.AND)
             loading_location_site_check = Site.objects.filter(q, location__pk=loading_location.pk).exists()
@@ -138,8 +142,12 @@ class DriveRecordCreateSerializer(serializers.ModelSerializer):
             car_site_check = Site.objects.filter(q, car__pk=car_pk).exists()
             driver_site_check = Site.objects.filter(q, driver__pk=driver_pk).exists()
             if not (
-                    loading_location_site_check or unloading_location_site_check or car_site_check or driver_site_check):
-                raise serializers.ValidationError('INVALID_LOCATION')
+                    loading_location_site_check and
+                    unloading_location_site_check and
+                    car_site_check and
+                    driver_site_check
+            ):
+                raise serializers.ValidationError('INVALID_DATA')
 
         if loading_location.resource.get(is_active=True).pk != unloading_location.resource.get(is_active=True).pk:
             raise serializers.ValidationError('INVALID_LOCATION_RESOURCE')

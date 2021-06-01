@@ -42,7 +42,7 @@ class DriveRecordView(APIView, MyPagination):
                     if drive_route_serializer.is_valid():
                         drive_route_serializer.save()
                         return Response({'message': 'CREATE_SUCCESS'}, status=status.HTTP_201_CREATED)
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(drive_route_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             drive_record = DriveRecord.objects.get(pk=drive_record_id)
@@ -54,11 +54,11 @@ class DriveRecordView(APIView, MyPagination):
                     'latitude': float(serializer.instance.unloading_location.latitude)
                 }
                 drive_route_serializer = DriveRouteCreateSerializer(data=drive_route, context={'admin': admin})
-                if drive_route_serializer.is_valid():
-                    drive_route_serializer.save()
-                    serializer.save()
-                    return Response({'message': 'UPDATE_SUCCESS'}, status=status.HTTP_201_CREATED)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                if not drive_route_serializer.is_valid():
+                    return Response(drive_route_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                drive_route_serializer.save()
+                serializer.save()
+                return Response({'message': 'UPDATE_SUCCESS'}, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             return Response({'message': 'KEY_ERROR'}, status=status.HTTP_400_BAD_REQUEST)
@@ -106,7 +106,7 @@ class DriveRecordView(APIView, MyPagination):
             return Response({'message': 'DRIVE_RECORD_NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class DriveRecordDetailView(APIView):
+class DriveRouteView(APIView):
     @login_required
     def post(self, request, drive_record_id):
         request.data['drive_record'] = drive_record_id
