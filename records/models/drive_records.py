@@ -128,30 +128,22 @@ class DriveRecordCreateSerializer(serializers.ModelSerializer):
             unloading_location_site_check = Site.objects.filter(q, location__pk=unloading_location.pk).exists()
             car_site_check = Site.objects.filter(q, car__pk=car_pk).exists()
             driver_site_check = Site.objects.filter(q, driver__pk=driver_pk).exists()
-            if not (
-                    loading_location_site_check and
-                    unloading_location_site_check and
-                    car_site_check and
-                    driver_site_check
-            ):
-                raise serializers.ValidationError('INVALID_DATA')
+            if loading_location_site_check and unloading_location_site_check and car_site_check and driver_site_check:
+                if loading_location.resource.get(is_active=True).pk != unloading_location.resource.get(is_active=True).pk:
+                    raise serializers.ValidationError('INVALID_LOCATION_RESOURCE')
+                return data
+            raise serializers.ValidationError('INVALID_DATA')
         elif admin.type == 'SiteAdmin':
             q.add(Q(site_admin__pk=admin.pk), q.AND)
             loading_location_site_check = Site.objects.filter(q, location__pk=loading_location.pk).exists()
             unloading_location_site_check = Site.objects.filter(q, location__pk=unloading_location.pk).exists()
             car_site_check = Site.objects.filter(q, car__pk=car_pk).exists()
             driver_site_check = Site.objects.filter(q, driver__pk=driver_pk).exists()
-            if not (
-                    loading_location_site_check and
-                    unloading_location_site_check and
-                    car_site_check and
-                    driver_site_check
-            ):
-                raise serializers.ValidationError('INVALID_DATA')
-
-        if loading_location.resource.get(is_active=True).pk != unloading_location.resource.get(is_active=True).pk:
-            raise serializers.ValidationError('INVALID_LOCATION_RESOURCE')
-        return data
+            if loading_location_site_check and unloading_location_site_check and car_site_check and driver_site_check:
+                if loading_location.resource.get(is_active=True).pk != unloading_location.resource.get(is_active=True).pk:
+                    raise serializers.ValidationError('INVALID_LOCATION_RESOURCE')
+                return data
+            raise serializers.ValidationError('INVALID_DATA')
 
 
 class DriveRecordUpdateSerializer(serializers.ModelSerializer):
