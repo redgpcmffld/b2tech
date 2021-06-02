@@ -1,0 +1,56 @@
+from django.db import models
+from django.core import validators
+
+from rest_framework import serializers
+
+from projects.models.sites import Site
+from users.models.driver import Driver
+
+
+class Car(models.Model):
+    TYPES = (('DumpTruck', '덤프 트럭'), ('WasteTruck', '폐기물 트럭'), ('RecyclingTruck', '재활용 트럭'), ('Tank', '탱크'))
+
+    car_id = models.BigAutoField(primary_key=True)
+    type = models.CharField(max_length=20, choices=TYPES)
+    number = models.CharField(max_length=20)
+    site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True)
+    driver = models.ManyToManyField(Driver, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'cars'
+
+
+class CarCreateSerializer(serializers.ModelSerializer):
+    site = serializers.PrimaryKeyRelatedField(queryset=Site.objects.filter(is_active=True))
+    driver = serializers.PrimaryKeyRelatedField(many=True, queryset=Driver.objects.filter(is_active=True))
+
+    class Meta:
+        model = Car
+        fields = '__all__'
+
+    def validate_number(self, number):
+        validators.RegexValidator(r'^[가-힣]{2}\d{2}[가-힣]{1}\d{4}$', 'INVALID_NUMBER')(number)
+        return number
+
+
+class CarViewSerializer(serializers.ModelSerializer):
+    site = serializers.SerializerMethodField(method_name='get_site')
+    driver = serializers.SerializerMethodField(method_name='get_driver')
+
+    class Meta:
+        model = Car
+        fields = ['car_id', 'type', 'number', 'driver', 'site']
+
+    def get_site(self, car):
+        return {'site_id': car.site.pk, 'name': car.site.name}
+
+    def get_driver(self, car):
+        result = [{
+            'driver_id': driver.pk,
+            'name': driver.name,
+            'phone_number': driver.phone_number
+        } for driver in car.driver.filter(is_active=True)]
+        return result
