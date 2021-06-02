@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from projects.models.sites import Site
-from projects.models.progress import ProgressSerializer, WorkLoadSerializer
+from projects.serializers.progress import ProgressSerializer, WorkLoadSerializer
 
 from utils import login_required
 

@@ -8,7 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from projects.models.cars import Car, CarCreateSerializer, CarViewSerializer
+from projects.models.cars import Car
+from projects.serializers.cars import CarCreateSerializer, CarViewSerializer
 
 from utils import login_required
 from pagination import MyPagination

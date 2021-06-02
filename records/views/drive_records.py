@@ -8,13 +8,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from ..models.drive_records import (
-    DriveRecord,
+from ..models.drive_records import DriveRecord
+from ..serializers.drive_records import (
     DriveRecordViewSerializer,
     DriveRecordCreateSerializer,
     DriveRecordUpdateSerializer
 )
-from ..models.drive_routes import DriveRouteCreateSerializer, DriveRouteViewSerializer
+from ..serializers.drive_routes import DriveRouteCreateSerializer, DriveRouteViewSerializer
 
 from utils import login_required
 from pagination import MyPagination

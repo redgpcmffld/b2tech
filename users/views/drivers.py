@@ -6,7 +6,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from ..models.driver import Driver, DriverCreateSerializer, DriverViewSerializer
+from ..models.drivers import Driver
+from ..serializers.drivers import DriverCreateSerializer, DriverViewSerializer
 
 from utils import login_required
 from pagination import MyPagination

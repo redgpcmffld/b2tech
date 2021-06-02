@@ -8,7 +8,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from openpyxl import Workbook
 
-from projects.models.locations import Location, LocationCreateSerializer, LocationViewSerializer
+from projects.models.locations import Location
+from projects.serializers.locations import LocationCreateSerializer, LocationViewSerializer
 
 from utils import login_required
 from pagination import MyPagination

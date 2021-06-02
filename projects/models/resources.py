@@ -1,7 +1,5 @@
 from django.db import models
 
-from rest_framework import serializers
-
 
 class Resource(models.Model):
     BLOCK_UNITS = (('Ton', '톤'), ('Kg', '킬로그램'), ('m**3', '세제곱미터'))
@@ -17,9 +15,3 @@ class Resource(models.Model):
 
     class Meta:
         db_table = 'resources'
-
-
-class ResourceCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Resource
-        fields = '__all__'

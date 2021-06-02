@@ -2,7 +2,7 @@ import jwt
 
 from rest_framework.response import Response
 from rest_framework import status
-from users.models.admin import Admin
+from users.models.admins import Admin
 
 from my_settings import algorithms, SECRET_KEY
 

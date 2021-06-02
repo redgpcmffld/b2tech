@@ -29,9 +29,12 @@ class ProgressSerializer(serializers.Serializer):
         plan = site.location_set.aggregate(Sum('plan'))['plan__sum']
         site_plan = int(plan / site_max_plan * 5)
         today_workloads = site.location_set.filter(is_active=True).aggregate(
-            today_workloads=Sum('loading_location__transport_weight',
-                                filter=Q(loading_location__driving_date=date.today()) & Q(loading_location__status=2)))[
-            'today_workloads']
+            today_workloads=Sum(
+                'loading_location__transport_weight',
+                filter=
+                Q(loading_location__driving_date=date.today()) &
+                Q(loading_location__status=2)))['today_workloads']
+
         days = (site.end_date - site.start_date).days
         today_plan = plan // days
         if today_workloads is None:

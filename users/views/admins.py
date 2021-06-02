@@ -7,7 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from ..models.admin import Admin, AdminCreateSerializer
+from ..models.admins import Admin
+from ..serializers.admins import AdminCreateSerializer
 
 from my_settings import SECRET_KEY, algorithms
 
