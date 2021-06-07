@@ -440,3 +440,4 @@ my_settings.py
 middleware.py
 db_upload
 logs
+models

@@ -3,9 +3,8 @@ from django.core import validators
 from rest_framework import serializers
 
 from ..models.cars import Car
+from ..models.sites import Site
 from users.models.drivers import Driver
-
-
 
 
 class CarCreateSerializer(serializers.ModelSerializer):
